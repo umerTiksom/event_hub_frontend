@@ -21,7 +21,7 @@ function Navbar() {
         bgcolor: "black",
         color: "white",
         borderBottom: 0.1,
-        borderColor: "rgb(69, 68, 68)",
+        borderColor: "rgb(52, 51, 51)",
       }}
     >
       <Container maxWidth="xl">

@@ -17,6 +17,8 @@ import CodeIcon from "@mui/icons-material/Code";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import SportsBasketballIcon from "@mui/icons-material/SportsBasketball";
+import CategoryBox from "../components/home/CategoryBox";
+import EventCard from "../components/EventCards";
 
 const events = [
   {
@@ -54,7 +56,7 @@ const categories = [
 
 function Home() {
   return (
-    <Box sx={{ bgcolor: "black", minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: "black", minHeight: "100vh", minWidth: "100vw" }}>
       {/* Hero Section */}
       <Box
         sx={{
@@ -114,11 +116,11 @@ function Home() {
                 endIcon={<ArrowForwardIcon />}
                 sx={{
                   bgcolor: "#2563eb",
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 2,
+                  py: 2,
+                  px: 4,
+                  borderRadius: 10,
                   fontWeight: 600,
-                  "&:hover": { bgcolor: "#1d4ed8" },
+                  "&:hover": { bgcolor: "#0d38ad" },
                 }}
               >
                 Explore Events
@@ -145,15 +147,27 @@ function Home() {
           </Box>
         </Container>
       </Box>
-
       {/* Categories Section */}
-      <Container maxWidth="lg" sx={{ py: 7 }}>
-        <Typography variant="h4" component="h2" sx={{ fontWeight: 750, mb: 1 }}>
+      <Container maxWidth="xl" sx={{ py: 7 }}>
+        <Typography
+          variant="h3"
+          sx={{ fontWeight: 750, mb: 1, color: "white" }}
+        >
           Explore Categories
         </Typography>
 
-        <Typography color="text.secondary" sx={{ mb: 4 }}>
-          Find events that match your interests.
+        <Typography
+          variant="subtitle1"
+          sx={{
+            mb: 4,
+            color: "grey",
+            maxWidth: { sm: "100vw", md: "45vw" },
+            py: 3,
+          }}
+        >
+          Discover events that match your interests. Browse through a variety of
+          categories to find exciting experiences, connect with like-minded
+          people, and explore opportunities that inspire you.
         </Typography>
 
         <Box
@@ -167,66 +181,37 @@ function Home() {
           }}
         >
           {categories.map((category) => (
-            <Card
-              key={category.name}
-              elevation={0}
-              sx={{
-                p: 2.5,
-                border: "1px solid #e2e8f0",
-                borderRadius: 3,
-                textAlign: "center",
-                transition: "0.2s",
-                "&:hover": {
-                  borderColor: "#2563eb",
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  bgcolor: "#dbeafe",
-                  color: "#2563eb",
-                  width: 52,
-                  height: 52,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mx: "auto",
-                  mb: 2,
-                  "& .MuiSvgIcon-root": { fontSize: 28 },
-                }}
-              >
-                {category.icon}
-              </Box>
-
-              <Typography fontWeight={650}>{category.name}</Typography>
-            </Card>
+            <CategoryBox name={category.name} icon={category.icon} />
           ))}
         </Box>
       </Container>
-
       {/* Featured Events Section */}
-      <Box sx={{ bgcolor: "white", py: 7 }}>
-        <Container maxWidth="lg">
+
+      <Box sx={{ py: 7 }}>
+        <Container maxWidth="xl">
+          {/* Featured Events Heading */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
             spacing={2}
-            sx={{ mb: 4 }}
+            sx={{
+              mb: 4,
+              width: "100%",
+              justifyContent: "space-between",
+            }}
           >
             <Box>
               <Typography
-                variant="h4"
-                component="h2"
-                sx={{ fontWeight: 750, mb: 1 }}
+                variant="h3"
+                sx={{
+                  fontWeight: 750,
+                  mb: 1,
+                  color: "white",
+                }}
               >
                 Featured Events
               </Typography>
 
-              <Typography color="text.secondary">
+              <Typography variant="subtitle1" sx={{ color: "gray" }}>
                 Discover experiences worth adding to your calendar.
               </Typography>
             </Box>
@@ -234,12 +219,24 @@ function Home() {
             <Button
               href="/events"
               endIcon={<ArrowForwardIcon />}
-              sx={{ fontWeight: 650 }}
+              sx={{
+                fontWeight: 650,
+                color: "#2563eb",
+                px: 7,
+                textDecoration: "none",
+
+                "&:hover": {
+                  textDecoration: "underline",
+                  textUnderlineOffset: "5px",
+                  backgroundColor: "transparent",
+                },
+              }}
             >
               View All Events
             </Button>
           </Stack>
 
+          {/* Events Cards */}
           <Box
             sx={{
               display: "grid",
@@ -252,93 +249,24 @@ function Home() {
             }}
           >
             {events.map((event) => (
-              <Card
-                key={event.id}
-                elevation={0}
-                sx={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 3,
-                  overflow: "hidden",
-                  transition: "0.2s",
-                  "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: "0 12px 30px rgba(15,23,42,0.1)",
-                  },
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="210"
-                  image={event.image}
-                  alt={event.title}
-                  sx={{ objectFit: "cover" }}
-                />
-
-                <CardContent sx={{ p: 2.5 }}>
-                  <Chip
-                    label={event.category}
-                    size="small"
-                    sx={{
-                      bgcolor: "#dbeafe",
-                      color: "#1d4ed8",
-                      fontWeight: 600,
-                      mb: 2,
-                    }}
-                  />
-
-                  <Typography
-                    variant="h6"
-                    component="h3"
-                    sx={{ fontWeight: 700, mb: 2 }}
-                  >
-                    {event.title}
-                  </Typography>
-
-                  <Stack spacing={1.5} sx={{ mb: 2.5 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EventAvailableIcon
-                        sx={{ color: "#64748b", fontSize: 20 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {event.date}
-                      </Typography>
-                    </Stack>
-
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <LocationOnOutlinedIcon
-                        sx={{ color: "#64748b", fontSize: 20 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {event.location}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-
-                  <Button
-                    href={`/events/${event.id}`}
-                    variant="outlined"
-                    fullWidth
-                    endIcon={<ArrowForwardIcon />}
-                    sx={{
-                      borderRadius: 2,
-                      py: 1,
-                      fontWeight: 600,
-                    }}
-                  >
-                    View Details
-                  </Button>
-                </CardContent>
-              </Card>
+              <EventCard
+                title={event.title}
+                id={event.id}
+                location={event.location}
+                category={event.category}
+                date={event.date}
+                image={event.image}
+              />
             ))}
           </Box>
         </Container>
       </Box>
-
       {/* Call To Action */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Container maxWidth="xl" sx={{ py: 8 }}>
         <Box
           sx={{
-            bgcolor: "#172554",
+            background:
+              "linear-gradient(120deg, #000149 0%, #0e1326 60%, #285be5 100%)",
             color: "white",
             borderRadius: 4,
             p: { xs: 4, md: 7 },
@@ -387,7 +315,6 @@ function Home() {
           </Button>
         </Box>
       </Container>
-
       {/* Footer */}
       <Box
         component="footer"

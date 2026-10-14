@@ -1,40 +1,95 @@
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
+import { Chip, Stack } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 
-function EventCard(props) {
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
+function EventCard({ image, title, category, location, date, id }) {
   return (
-    <Card sx={{ maxWidth: 345 }}>
-      <CardMedia
-        component="img"
-        image="https://images.unsplash.com/photo-1506157786151-b8491531f063?w=600"
-        alt="Live music event"
-      />
+    <>
+      <Card
+        key={id}
+        elevation={0}
+        sx={{
+          bgcolor: "#111827",
+          color: "white",
+          border: "1px solid #334155",
+          borderRadius: 3,
+          overflow: "hidden",
+          transition: "0.2s",
+          "&:hover": {
+            transform: "translateY(-5px)",
+            boxShadow: "0 12px 30px rgba(15,23,42,0.3)",
+          },
+        }}
+      >
+        <CardMedia
+          component="img"
+          height="210"
+          image={image}
+          alt={title}
+          sx={{ objectFit: "cover" }}
+        />
 
-      <CardContent>
-        <Typography variant="h5" component="div">
-          {props.title ? props.title : "unknown event"}
-        </Typography>
+        <CardContent sx={{ p: 2.5 }}>
+          <Chip
+            label={category}
+            size="small"
+            sx={{
+              bgcolor: "#1e3a8a",
+              color: "#bfdbfe",
+              fontWeight: 600,
+              mb: 2,
+            }}
+          />
 
-        <Typography variant="body2" color="text.secondary">
-          Location: Lahore
-        </Typography>
+          <Typography
+            variant="h6"
+            component="h3"
+            sx={{ fontWeight: 700, mb: 2 }}
+          >
+            {title}
+          </Typography>
 
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Enjoy live music with friends and family.
-        </Typography>
-      </CardContent>
+          <Stack spacing={1.5} sx={{ mb: 2.5 }}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <EventAvailableIcon sx={{ color: "#94a3b8", fontSize: 20 }} />
+              <Typography variant="body2" sx={{ color: "#cbd5e1" }}>
+                {date}
+              </Typography>
+            </Stack>
 
-      <CardActions>
-        <Button size="small">View Details</Button>
-        <Button size="small" variant="contained">
-          Register
-        </Button>
-      </CardActions>
-    </Card>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <LocationOnOutlinedIcon sx={{ color: "#94a3b8", fontSize: 20 }} />
+              <Typography variant="body2" sx={{ color: "#cbd5e1" }}>
+                {location}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          <Button
+            href={`/events/${id}`}
+            variant="outlined"
+            fullWidth
+            endIcon={<ArrowForwardIcon />}
+            sx={{
+              borderRadius: 2,
+              py: 1,
+              fontWeight: 600,
+              color: "#60a5fa",
+              borderColor: "#2563eb",
+            }}
+          >
+            View Details
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
