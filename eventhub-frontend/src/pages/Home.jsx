@@ -3,16 +3,12 @@ import {
   Container,
   Typography,
   Button,
-  Card,
-  CardMedia,
-  CardContent,
+  Grid,
   Chip,
   Stack,
 } from "@mui/material";
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import EventAvailableIcon from "@mui/icons-material/EventAvailable";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CodeIcon from "@mui/icons-material/Code";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
@@ -237,28 +233,21 @@ function Home() {
           </Stack>
 
           {/* Events Cards */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-                md: "repeat(3, minmax(0, 1fr))",
-              },
-              gap: 3,
-            }}
-          >
+
+          <Grid container spacing={3}>
             {events.map((event) => (
-              <EventCard
-                title={event.title}
-                id={event.id}
-                location={event.location}
-                category={event.category}
-                date={event.date}
-                image={event.image}
-              />
+              <Grid key={event.id} size={{ xs: 12, sm: 6, md: 6 }}>
+                <EventCard
+                  title={event.title}
+                  id={event.id}
+                  location={event.location}
+                  category={event.category}
+                  date={event.date}
+                  image={event.image}
+                />
+              </Grid>
             ))}
-          </Box>
+          </Grid>
         </Container>
       </Box>
       {/* Call To Action */}
