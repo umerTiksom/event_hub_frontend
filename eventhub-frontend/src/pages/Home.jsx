@@ -7,7 +7,7 @@ import {
   Chip,
   Stack,
 } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CodeIcon from "@mui/icons-material/Code";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
@@ -15,33 +15,7 @@ import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import SportsBasketballIcon from "@mui/icons-material/SportsBasketball";
 import CategoryBox from "../components/home/CategoryBox";
 import EventCard from "../components/EventCards";
-
-const events = [
-  {
-    id: 1,
-    title: "Tech Innovation Summit",
-    category: "Technology",
-    date: "November 15, 2026",
-    location: "Lahore, Pakistan",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900",
-  },
-  {
-    id: 2,
-    title: "Music & Arts Festival",
-    category: "Music",
-    date: "November 22, 2026",
-    location: "Lahore, Pakistan",
-    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=900",
-  },
-  {
-    id: 3,
-    title: "Business Growth Meetup",
-    category: "Business",
-    date: "December 5, 2026",
-    location: "Lahore, Pakistan",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=900",
-  },
-];
+import events from "../data/events.json";
 
 const categories = [
   { name: "Technology", icon: <CodeIcon /> },
@@ -51,6 +25,7 @@ const categories = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
   return (
     <Box sx={{ bgcolor: "black", minHeight: "100vh", minWidth: "100vw" }}>
       {/* Hero Section */}
@@ -107,7 +82,7 @@ function Home() {
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
-                href="/events"
+                onClick={() => navigate(`/events`)}
                 variant="contained"
                 endIcon={<ArrowForwardIcon />}
                 sx={{
@@ -123,7 +98,7 @@ function Home() {
               </Button>
 
               <Button
-                href="/register"
+                onClick={() => navigate(`/register`)}
                 variant="outlined"
                 sx={{
                   color: "white",
@@ -236,7 +211,7 @@ function Home() {
 
           <Grid container spacing={3}>
             {events.map((event) => (
-              <Grid key={event.id} size={{ xs: 12, sm: 6, md: 6 }}>
+              <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
                 <EventCard
                   title={event.title}
                   id={event.id}
@@ -288,7 +263,7 @@ function Home() {
           </Typography>
 
           <Button
-            href="/register"
+            onClick={() => navigate(`/register`)}
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             sx={{

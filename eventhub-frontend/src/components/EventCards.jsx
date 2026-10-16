@@ -4,12 +4,13 @@ import CardContent from "@mui/material/CardContent";
 import { Chip, Stack } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-
+import { useNavigate } from "react-router-dom";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 function EventCard({ image, title, category, location, date, id }) {
+  const navigate = useNavigate();
   return (
     <>
       <Card
@@ -73,7 +74,7 @@ function EventCard({ image, title, category, location, date, id }) {
           </Stack>
 
           <Button
-            href={`/events/${id}`}
+            onClick={() => navigate(`/events/${id}`)}
             variant="outlined"
             fullWidth
             endIcon={<ArrowForwardIcon />}

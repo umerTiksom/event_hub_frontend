@@ -6,11 +6,12 @@ import {
   Box,
   Container,
 } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
 import { Link } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 
 function Navbar() {
+  const navigate = useNavigate();
   const currentPath = window.location.pathname;
 
   return (
@@ -31,7 +32,7 @@ function Navbar() {
         >
           <Box
             component={Link}
-            href="/"
+            onClick={() => navigate(`/`)}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -50,7 +51,7 @@ function Navbar() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               component={Link}
-              href="/"
+              onClick={() => navigate(`/`)}
               sx={{
                 color: currentPath === "/" ? "white" : "#94a3b8",
                 "&:hover": { color: "white" },
@@ -61,7 +62,7 @@ function Navbar() {
 
             <Button
               component={Link}
-              href="/events"
+              onClick={() => navigate(`/events`)}
               sx={{
                 color: currentPath.startsWith("/events") ? "white" : "#94a3b8",
                 "&:hover": { color: "white" },
@@ -72,7 +73,7 @@ function Navbar() {
 
             <Button
               component={Link}
-              href="/login"
+              onClick={() => navigate(`/login`)}
               variant="contained"
               sx={{
                 bgcolor: "#2563eb",
@@ -86,7 +87,7 @@ function Navbar() {
 
             <Button
               component={Link}
-              href="/register"
+              onClick={() => navigate(`/register`)}
               variant="outlined"
               sx={{
                 color: currentPath === "/register" ? "white" : "#94a3b8",
