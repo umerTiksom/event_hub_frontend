@@ -38,7 +38,7 @@ function Home() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ maxWidth: "60vw" }}>
+          <Box sx={{ maxWidth: { xs: "100dvw", md: "60vw" } }}>
             <Chip
               label="Discover | Connect | Experience."
               sx={{
@@ -152,7 +152,11 @@ function Home() {
           }}
         >
           {categories.map((category) => (
-            <CategoryBox name={category.name} icon={category.icon} />
+            <CategoryBox
+              name={category.name}
+              icon={category.icon}
+              onClick={() => navigate(`/events`)}
+            />
           ))}
         </Box>
       </Container>

@@ -1,9 +1,10 @@
 import { Card, Box, Typography } from "@mui/material";
-function CategoryBox({ name, icon }) {
+function CategoryBox({ name, icon, onClick }) {
   return (
     <>
       <Card
         elevation={0}
+        onClick={onClick}
         sx={{
           p: 2.5,
           bgcolor: "#2563eb",
@@ -12,6 +13,7 @@ function CategoryBox({ name, icon }) {
           transition: "0.2s",
           "&:hover": {
             transform: "translateY(-4px)",
+            cursor: "pointer",
           },
         }}
       >
