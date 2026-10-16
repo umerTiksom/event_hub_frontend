@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import {
   Box,
   Container,
@@ -9,22 +10,83 @@ import {
   Grid,
   Stack,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
 import EventCard from "../components/EventCards";
-import events from "../data/events.json";
+import api from "../api/axios";
 
 function Events() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const categories = ["All", ...new Set(events.map((event) => event.category))];
+  // Fetch events from Rails API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
+        const response = await api.get("/events");
+
+        // API direct array ya { events: [...] } return kar sakti hai
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data.events || [];
+
+        // Rails fields ko existing React EventCard ke format mein convert karo
+        const formattedEvents = data.map((event) => ({
+          ...event,
+          id: event.id ?? event.event_id,
+          title: event.title ?? event.name ?? "",
+          category:
+            typeof event.category === "string"
+              ? event.category
+              : (event.category?.name ??
+                event.category_name ??
+                "Uncategorized"),
+          location: event.location ?? "",
+          date: event.date ?? "",
+          image: event.image ?? event.image_url ?? "",
+        }));
+
+        setEvents(formattedEvents);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+        setError(
+          err.response?.data?.message ||
+            "Events load nahi ho sake. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // Categories API events se generate hongi
+  const categories = [
+    "All",
+    ...new Set(
+      events
+        .map((event) => event.category)
+        .filter((category) => category && category !== "Uncategorized"),
+    ),
+  ];
+
+  // Search aur category filtering
   const filteredEvents = events.filter((event) => {
+    const searchTerm = search.toLowerCase();
+
     const matchesSearch =
-      event.title.toLowerCase().includes(search.toLowerCase()) ||
-      event.location.toLowerCase().includes(search.toLowerCase());
+      event.title.toLowerCase().includes(searchTerm) ||
+      event.location.toLowerCase().includes(searchTerm);
 
     const matchesCategory =
       selectedCategory === "All" || event.category === selectedCategory;
@@ -63,7 +125,7 @@ function Events() {
           </Typography>
         </Stack>
 
-        {/* Search and Category Filter  */}
+        {/* Search and Category Filter */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
@@ -80,10 +142,6 @@ function Events() {
                 color: "#94a3b8",
                 bgcolor: "#151e30",
                 borderRadius: 2,
-
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#2563eb",
-                },
                 "& fieldset": { borderColor: "#334155" },
                 "&:hover fieldset": { borderColor: "#475569" },
                 "&.Mui-focused fieldset": { borderColor: "#2563eb" },
@@ -127,83 +185,107 @@ function Events() {
           </TextField>
         </Stack>
 
-        {/* Results Count */}
-        <Stack
-          direction="column"
-          spacing={3}
-          justifyContent="center"
-          alignItems="center"
-          sx={{ mb: 3 }}
-        >
-          <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-            Showing {filteredEvents.length}{" "}
-            {filteredEvents.length === 1 ? "event" : "events"}
-          </Typography>
-
-          {selectedCategory !== "All" && (
-            <Chip
-              label={selectedCategory}
-              onDelete={() => setSelectedCategory("All")}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                color: "#bfdbfe",
-
-                bgcolor: "#1e3a8a",
-
-                maxWidth: "10%",
-              }}
-            />
-          )}
-        </Stack>
-
-        {/* Event Cards */}
-        {filteredEvents.length > 0 ? (
-          <Grid container spacing={3}>
-            {filteredEvents.map((event) => (
-              <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <EventCard
-                  id={event.id}
-                  title={event.title}
-                  category={event.category}
-                  location={event.location}
-                  date={event.date}
-                  image={event.image}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        ) : (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 8,
-              px: 2,
-              border: "1px solid #334155",
-              borderRadius: 3,
-              bgcolor: "#111827",
-            }}
-          >
-            <SearchIcon sx={{ fontSize: 48, color: "#64748b", mb: 1 }} />
-
-            <Typography variant="h5" fontWeight={700} gutterBottom>
-              No events found
-            </Typography>
-
-            <Typography sx={{ color: "#94a3b8", mb: 2 }}>
-              Try another search term or select a different category.
+        {/* Loading State */}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress sx={{ color: "#60a5fa" }} />
+          </Box>
+        ) : error ? (
+          /* Error State */
+          <Box sx={{ textAlign: "center", py: 8 }}>
+            <Typography color="error" variant="h6">
+              {error}
             </Typography>
 
             <Chip
-              label="Clear filters"
+              label="Retry"
               clickable
-              onClick={() => {
-                setSearch("");
-                setSelectedCategory("All");
+              onClick={() => window.location.reload()}
+              sx={{
+                mt: 2,
+                color: "white",
+                bgcolor: "#1e3a8a",
               }}
-              color="primary"
             />
           </Box>
+        ) : (
+          <>
+            {/* Results Count */}
+            <Stack
+              direction="column"
+              spacing={2}
+              justifyContent="center"
+              alignItems="center"
+              sx={{ mb: 3 }}
+            >
+              <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                Showing {filteredEvents.length}{" "}
+                {filteredEvents.length === 1 ? "event" : "events"}
+              </Typography>
+
+              {selectedCategory !== "All" && (
+                <Chip
+                  label={selectedCategory}
+                  onDelete={() => setSelectedCategory("All")}
+                  sx={{
+                    color: "#bfdbfe",
+                    bgcolor: "#1e3a8a",
+                  }}
+                />
+              )}
+            </Stack>
+
+            {/* Event Cards */}
+            {filteredEvents.length > 0 ? (
+              <Grid container spacing={3}>
+                {filteredEvents.map((event) => (
+                  <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                    <EventCard
+                      id={event.id}
+                      title={event.name}
+                      description={event.description}
+                      category={event.category}
+                      location={event.location}
+                      date={event.date}
+                      image={event.image}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              /* No Events Found */
+              <Box
+                sx={{
+                  textAlign: "center",
+                  py: 8,
+                  px: 2,
+                  border: "1px solid #334155",
+                  borderRadius: 3,
+                  bgcolor: "#111827",
+                }}
+              >
+                <SearchIcon sx={{ fontSize: 48, color: "#64748b", mb: 1 }} />
+
+                <Typography variant="h5" fontWeight={700} gutterBottom>
+                  No events found
+                </Typography>
+
+                <Typography sx={{ color: "#94a3b8", mb: 2 }}>
+                  Try another search term or select a different category.
+                </Typography>
+
+                <Chip
+                  label="Clear filters"
+                  clickable
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedCategory("All");
+                  }}
+                  color="primary"
+                />
+              </Box>
+            )}
+          </>
         )}
       </Container>
     </Box>
