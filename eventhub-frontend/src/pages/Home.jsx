@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Box,
   Container,
@@ -6,16 +8,19 @@ import {
   Grid,
   Chip,
   Stack,
+  CircularProgress,
 } from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CodeIcon from "@mui/icons-material/Code";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import SportsBasketballIcon from "@mui/icons-material/SportsBasketball";
+
 import CategoryBox from "../components/home/CategoryBox";
 import EventCard from "../components/EventCards";
-import events from "../data/events.json";
+import api from "../api/axios";
 
 const categories = [
   { name: "Technology", icon: <CodeIcon /> },
@@ -26,8 +31,70 @@ const categories = [
 
 function Home() {
   const navigate = useNavigate();
+
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch featured events from Rails API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // Fetch the first page of events
+        const response = await api.get("/events", {
+          params: { page: 1 },
+        });
+
+        // Rails response: { status, data, pagination }
+        const data = Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+
+        // Convert Rails event fields to EventCard props
+        const formattedEvents = data.map((event) => ({
+          ...event,
+          id: event.id ?? event.event_id,
+          title: event.title ?? event.name ?? "",
+          description: event.description ?? "",
+          category:
+            typeof event.category === "string"
+              ? event.category
+              : (event.category?.name ??
+                event.category_name ??
+                "Uncategorized"),
+          location: event.location ?? "",
+          date: event.date ?? "",
+          image: event.image ?? event.image_url ?? "",
+        }));
+
+        // Display only 3 events on Home
+        setEvents(formattedEvents.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch Home events:", err);
+
+        setError(
+          err.response?.data?.message ||
+            "Events load nahi ho sake. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
   return (
-    <Box sx={{ bgcolor: "black", minHeight: "100vh", minWidth: "100vw" }}>
+    <Box
+      sx={{
+        bgcolor: "black",
+        minHeight: "100vh",
+        width: "100%",
+      }}
+    >
       {/* Hero Section */}
       <Box
         sx={{
@@ -38,7 +105,7 @@ function Home() {
         }}
       >
         <Container maxWidth="xl">
-          <Box sx={{ maxWidth: { xs: "100dvw", md: "60vw" } }}>
+          <Box sx={{ maxWidth: { xs: "100%", md: "60vw" } }}>
             <Chip
               label="Discover | Connect | Experience."
               sx={{
@@ -82,7 +149,7 @@ function Home() {
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
-                onClick={() => navigate(`/events`)}
+                onClick={() => navigate("/events")}
                 variant="contained"
                 endIcon={<ArrowForwardIcon />}
                 sx={{
@@ -98,7 +165,7 @@ function Home() {
               </Button>
 
               <Button
-                onClick={() => navigate(`/register`)}
+                onClick={() => navigate("/register")}
                 variant="outlined"
                 sx={{
                   color: "white",
@@ -118,6 +185,7 @@ function Home() {
           </Box>
         </Container>
       </Box>
+
       {/* Categories Section */}
       <Container maxWidth="xl" sx={{ py: 7 }}>
         <Typography
@@ -132,7 +200,7 @@ function Home() {
           sx={{
             mb: 4,
             color: "grey",
-            maxWidth: { sm: "100vw", md: "45vw" },
+            maxWidth: { sm: "100%", md: "45vw" },
             py: 3,
           }}
         >
@@ -153,18 +221,22 @@ function Home() {
         >
           {categories.map((category) => (
             <CategoryBox
+              key={category.name}
               name={category.name}
               icon={category.icon}
-              onClick={() => navigate(`/events`)}
+              onClick={() =>
+                navigate(
+                  `/events?category=${encodeURIComponent(category.name)}`,
+                )
+              }
             />
           ))}
         </Box>
       </Container>
-      {/* Featured Events Section */}
 
+      {/* Featured Events Section */}
       <Box sx={{ py: 7 }}>
         <Container maxWidth="xl">
-          {/* Featured Events Heading */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
@@ -192,14 +264,14 @@ function Home() {
             </Box>
 
             <Button
-              href="/events"
+              onClick={() => navigate("/events")}
               endIcon={<ArrowForwardIcon />}
               sx={{
                 fontWeight: 650,
                 color: "#2563eb",
-                px: 7,
+                px: 3,
                 textDecoration: "none",
-
+                alignSelf: { xs: "flex-start", sm: "center" },
                 "&:hover": {
                   textDecoration: "underline",
                   textUnderlineOffset: "5px",
@@ -211,24 +283,61 @@ function Home() {
             </Button>
           </Stack>
 
-          {/* Events Cards */}
+          {/* Loading, Error and Events */}
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                py: 8,
+              }}
+            >
+              <CircularProgress sx={{ color: "#60a5fa" }} />
+            </Box>
+          ) : error ? (
+            <Box sx={{ textAlign: "center", py: 5 }}>
+              <Typography color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
 
-          <Grid container spacing={3}>
-            {events.map((event) => (
-              <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <EventCard
-                  title={event.title}
-                  id={event.id}
-                  location={event.location}
-                  category={event.category}
-                  date={event.date}
-                  image={event.image}
-                />
-              </Grid>
-            ))}
-          </Grid>
+              <Button
+                variant="outlined"
+                onClick={() => window.location.reload()}
+                sx={{ color: "white", borderColor: "#64748b" }}
+              >
+                Retry
+              </Button>
+            </Box>
+          ) : events.length > 0 ? (
+            <Grid container spacing={3}>
+              {events.map((event) => (
+                <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <EventCard
+                    id={event.id}
+                    title={event.title}
+                    description={event.description}
+                    location={event.location}
+                    category={event.category}
+                    date={event.date}
+                    image={event.image}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Typography
+              sx={{
+                color: "#94a3b8",
+                textAlign: "center",
+                py: 6,
+              }}
+            >
+              No events available right now.
+            </Typography>
+          )}
         </Container>
       </Box>
+
       {/* Call To Action */}
       <Container maxWidth="xl" sx={{ py: 8 }}>
         <Box
@@ -267,7 +376,7 @@ function Home() {
           </Typography>
 
           <Button
-            onClick={() => navigate(`/register`)}
+            onClick={() => navigate("/register")}
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             sx={{
@@ -283,6 +392,7 @@ function Home() {
           </Button>
         </Box>
       </Container>
+
       {/* Footer */}
       <Box
         component="footer"

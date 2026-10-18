@@ -25,6 +25,12 @@ function Events() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalCount: 0,
+    totalPages: 0,
+  });
+
   // Fetch events from Rails API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -32,18 +38,33 @@ function Events() {
         setLoading(true);
         setError("");
 
-        const response = await api.get("/events");
+        const params = {
+          page: 1,
+        };
 
-        // API direct array ya { events: [...] } return kar sakti hai
-        const data = Array.isArray(response.data)
-          ? response.data
-          : response.data.events || [];
+        if (search.trim()) {
+          params.search = search.trim();
+        }
 
-        // Rails fields ko existing React EventCard ke format mein convert karo
+        if (selectedCategory !== "All") {
+          params.category = selectedCategory;
+        }
+
+        const response = await api.get("/events", { params });
+
+        console.log("Rails API Response:", response.data);
+
+        // Rails returns { status, data, pagination }
+        const data = Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+
         const formattedEvents = data.map((event) => ({
           ...event,
           id: event.id ?? event.event_id,
           title: event.title ?? event.name ?? "",
+          name: event.name ?? event.title ?? "",
+          description: event.description ?? "",
           category:
             typeof event.category === "string"
               ? event.category
@@ -56,21 +77,32 @@ function Events() {
         }));
 
         setEvents(formattedEvents);
+
+        setPagination({
+          currentPage: response.data.pagination?.current_page ?? 1,
+          totalCount: response.data.pagination?.total_count ?? data.length,
+          totalPages: response.data.pagination?.total_pages ?? 1,
+        });
+
+        console.log("Fetched Events:", formattedEvents);
       } catch (err) {
         console.error("Failed to fetch events:", err);
+
         setError(
           err.response?.data?.message ||
             "Events load nahi ho sake. Please try again.",
         );
+
+        setEvents([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvents();
-  }, []);
+  }, [search, selectedCategory]);
 
-  // Categories API events se generate hongi
+  // Generate category options from fetched events
   const categories = [
     "All",
     ...new Set(
@@ -80,22 +112,19 @@ function Events() {
     ),
   ];
 
-  // Search aur category filtering
-  const filteredEvents = events.filter((event) => {
-    const searchTerm = search.toLowerCase();
-
-    const matchesSearch =
-      event.title.toLowerCase().includes(searchTerm) ||
-      event.location.toLowerCase().includes(searchTerm);
-
-    const matchesCategory =
-      selectedCategory === "All" || event.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
-  });
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedCategory("All");
+  };
 
   return (
-    <Box sx={{ bgcolor: "black", color: "white", minHeight: "100vh" }}>
+    <Box
+      sx={{
+        bgcolor: "black",
+        color: "white",
+        minHeight: "100vh",
+      }}
+    >
       <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
         {/* Page Heading */}
         <Stack spacing={1} sx={{ mb: 4 }}>
@@ -118,7 +147,12 @@ function Events() {
 
           <Typography
             variant="h6"
-            sx={{ paddingTop: 2, color: "#94a3b8", maxWidth: 600 }}
+            sx={{
+              pt: 2,
+              color: "#94a3b8",
+              maxWidth: 600,
+              fontWeight: 400,
+            }}
           >
             Discover workshops, meetups, and exciting events. Find your next
             learning opportunity with EventHub.
@@ -134,17 +168,23 @@ function Events() {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Search by event name or location..."
+            placeholder="Search by event name or description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             sx={{
               "& .MuiOutlinedInput-root": {
-                color: "#94a3b8",
+                color: "white",
                 bgcolor: "#151e30",
                 borderRadius: 2,
-                "& fieldset": { borderColor: "#334155" },
-                "&:hover fieldset": { borderColor: "#475569" },
-                "&.Mui-focused fieldset": { borderColor: "#2563eb" },
+                "& fieldset": {
+                  borderColor: "#334155",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#475569",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#2563eb",
+                },
               },
               "& input::placeholder": {
                 color: "#94a3b8",
@@ -172,9 +212,13 @@ function Events() {
                 color: "white",
                 bgcolor: "#111827",
                 borderRadius: 2,
-                "& fieldset": { borderColor: "#334155" },
+                "& fieldset": {
+                  borderColor: "#334155",
+                },
               },
-              "& .MuiSvgIcon-root": { color: "white" },
+              "& .MuiSvgIcon-root": {
+                color: "white",
+              },
             }}
           >
             {categories.map((category) => (
@@ -187,22 +231,31 @@ function Events() {
 
         {/* Loading State */}
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              py: 8,
+            }}
+          >
             <CircularProgress sx={{ color: "#60a5fa" }} />
           </Box>
         ) : error ? (
           /* Error State */
           <Box sx={{ textAlign: "center", py: 8 }}>
-            <Typography color="error" variant="h6">
+            <Typography color="error" variant="h6" sx={{ mb: 2 }}>
               {error}
             </Typography>
 
             <Chip
               label="Retry"
               clickable
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setSearch((previous) => previous);
+                // Trigger a fresh request even when search is unchanged
+                window.location.reload();
+              }}
               sx={{
-                mt: 2,
                 color: "white",
                 bgcolor: "#1e3a8a",
               }}
@@ -212,15 +265,15 @@ function Events() {
           <>
             {/* Results Count */}
             <Stack
-              direction="column"
+              direction="row"
               spacing={2}
               justifyContent="center"
               alignItems="center"
               sx={{ mb: 3 }}
             >
               <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                Showing {filteredEvents.length}{" "}
-                {filteredEvents.length === 1 ? "event" : "events"}
+                Showing {events.length} of {pagination.totalCount}{" "}
+                {pagination.totalCount === 1 ? "event" : "events"}
               </Typography>
 
               {selectedCategory !== "All" && (
@@ -236,13 +289,13 @@ function Events() {
             </Stack>
 
             {/* Event Cards */}
-            {filteredEvents.length > 0 ? (
+            {events.length > 0 ? (
               <Grid container spacing={3}>
-                {filteredEvents.map((event) => (
+                {events.map((event) => (
                   <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
                     <EventCard
                       id={event.id}
-                      title={event.name}
+                      title={event.title}
                       description={event.description}
                       category={event.category}
                       location={event.location}
@@ -264,7 +317,13 @@ function Events() {
                   bgcolor: "#111827",
                 }}
               >
-                <SearchIcon sx={{ fontSize: 48, color: "#64748b", mb: 1 }} />
+                <SearchIcon
+                  sx={{
+                    fontSize: 48,
+                    color: "#64748b",
+                    mb: 1,
+                  }}
+                />
 
                 <Typography variant="h5" fontWeight={700} gutterBottom>
                   No events found
@@ -277,10 +336,7 @@ function Events() {
                 <Chip
                   label="Clear filters"
                   clickable
-                  onClick={() => {
-                    setSearch("");
-                    setSelectedCategory("All");
-                  }}
+                  onClick={clearFilters}
                   color="primary"
                 />
               </Box>
