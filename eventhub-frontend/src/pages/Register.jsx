@@ -62,7 +62,7 @@ function Register() {
     <>
       <Box
         sx={{
-          minHeight: "100vh",
+          minHeight: "80vh",
           display: "flex",
           alignItems: "center",
           py: 5,
@@ -81,13 +81,14 @@ function Register() {
             <Stack spacing={1} alignItems="center" sx={{ mb: 4 }}>
               <Box
                 sx={{
-                  maxWidth: "10%",
-                  maxHeight: "10%",
+                  maxWidth: "40px",
+                  maxHeight: "40px",
                   bgcolor: "#d7ddf2",
                   color: "#3157d5",
                   p: 2,
-                  borderRadius: 15,
+                  borderRadius: 10,
                   display: "flex",
+                  justifyContent: "center",
                 }}
               >
                 <PersonAddAlt1Icon fontSize="large" />
@@ -122,17 +123,17 @@ function Register() {
               <Stack spacing={2.5}>
                 <TextField
                   fullWidth
-                  label="Full Name"
+                  placeholder="Full Name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
                   sx={{
                     "& input::placeholder": {
-                      color: "white",
+                      color: "black",
                     },
                     "& .MuiOutlinedInput-root": {
-                      color: "black",
+                      color: "black ",
                       bgcolor: "#c2cbdd",
                       borderRadius: 2,
                       "& fieldset": {
@@ -150,32 +151,89 @@ function Register() {
 
                 <TextField
                   fullWidth
-                  label="Email Address"
+                  placeholder="Email Address"
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  sx={{
+                    "& input::placeholder": {
+                      color: "black",
+                    },
+                    "& .MuiOutlinedInput-root": {
+                      color: "black ",
+                      bgcolor: "#c2cbdd",
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "#334155",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#475569",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#2563eb",
+                      },
+                    },
+                  }}
                 />
 
                 <TextField
                   fullWidth
-                  label="Phone Number"
+                  placeholder="Phone Number"
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
                   required
+                  sx={{
+                    "& input::placeholder": {
+                      color: "black",
+                    },
+                    "& .MuiOutlinedInput-root": {
+                      color: "black ",
+                      bgcolor: "#c2cbdd",
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "#334155",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#475569",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#2563eb",
+                      },
+                    },
+                  }}
                 />
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  placeholder="Password"
                   name="password"
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
                   inputProps={{ minLength: 8 }}
                   required
+                  sx={{
+                    "& input::placeholder": {
+                      color: "black",
+                    },
+                    "& .MuiOutlinedInput-root": {
+                      color: "black ",
+                      bgcolor: "#c2cbdd",
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "#334155",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#475569",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#2563eb",
+                      },
+                    },
+                  }}
                 />
 
                 <Button
