@@ -11,6 +11,7 @@ import {
   Stack,
   Chip,
   CircularProgress,
+  Button,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -127,7 +128,7 @@ function Events() {
     >
       <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
         {/* Page Heading */}
-        <Stack spacing={1} sx={{ mb: 4 }}>
+        <Stack spacing={1} sx={{ mb: 4 }} direction="column">
           <Typography
             variant="subtitle2"
             sx={{ color: "#60a5fa", fontWeight: 700 }}
@@ -149,7 +150,7 @@ function Events() {
             variant="h6"
             sx={{
               pt: 2,
-              color: "#94a3b8",
+
               maxWidth: 600,
               fontWeight: 400,
             }}
@@ -157,6 +158,18 @@ function Events() {
             Discover workshops, meetups, and exciting events. Find your next
             learning opportunity with EventHub.
           </Typography>
+
+          <Button
+            sx={{
+              bgcolor: "#022653",
+              p: { sm: 3, md: 2 },
+              color: "rgb(183, 183, 183)",
+              fontWeight: 700,
+              maxWidth: "sm",
+            }}
+          >
+            Create new event
+          </Button>
         </Stack>
 
         {/* Search and Category Filter */}
