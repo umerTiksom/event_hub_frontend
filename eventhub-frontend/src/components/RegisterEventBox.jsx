@@ -60,7 +60,6 @@ function RegisterEventBox({ event }) {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
 
-  // Redirect unauthenticated users to login
   const redirectToLogin = () => {
     localStorage.removeItem("token");
     setFormOpen(false);

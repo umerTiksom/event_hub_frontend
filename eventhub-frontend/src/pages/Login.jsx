@@ -85,7 +85,7 @@ function Login() {
 
       setTimeout(() => {
         navigate("/");
-      }, 1200);
+      }, 500);
     } catch (err) {
       const status = err.response?.status;
       const data = err.response?.data;
@@ -120,7 +120,6 @@ function Login() {
       "& fieldset": {
         borderColor: "#334155",
       },
-
       "&:hover fieldset": {
         borderColor: "#64748b",
       },
