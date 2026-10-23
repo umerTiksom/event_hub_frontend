@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   AppBar,
@@ -11,6 +11,8 @@ import {
   Drawer,
   useMediaQuery,
   useTheme,
+  Avatar,
+  Tooltip,
 } from "@mui/material";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -27,32 +29,66 @@ function Navbar() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
 
   const currentPath = location.pathname;
+  const isLoggedIn = Boolean(user && localStorage.getItem("token"));
 
-  // Open mobile navigation
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user")) || null);
+      } catch {
+        setUser(null);
+      }
+    };
+
+    loadUser();
+
+    window.addEventListener("authChanged", loadUser);
+
+    return () => {
+      window.removeEventListener("authChanged", loadUser);
+    };
+  }, [location.pathname]);
+
   const handleMenuOpen = () => {
     setMobileOpen(true);
   };
 
-  // Close mobile navigation
   const handleMenuClose = () => {
     setMobileOpen(false);
   };
 
-  // Navigate and close mobile menu
   const handleNavigation = (path) => {
     navigate(path);
     handleMenuClose();
   };
 
-  // Navigation links
+  // Logout user
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    setUser(null);
+    handleMenuClose();
+    navigate("/login");
+  };
+
+  // Get first letter of user's name
+  const userInitial = user?.name?.trim()?.charAt(0)?.toUpperCase() || "?";
+
   const navLinks = [
     { label: "Home", path: "/" },
     { label: "Events", path: "/events" },
   ];
 
-  // Check active route
   const isActive = (path) => {
     if (path === "/") {
       return currentPath === "/";
@@ -61,7 +97,6 @@ function Navbar() {
     return currentPath.startsWith(path);
   };
 
-  // Desktop navigation button styles
   const navButtonStyles = (path) => ({
     color: isActive(path) ? "white" : "#94a3b8",
     fontWeight: isActive(path) ? 700 : 500,
@@ -72,9 +107,28 @@ function Navbar() {
     },
   });
 
+  // User avatar
+  const UserAvatar = () => (
+    <Tooltip title={user.name}>
+      <Avatar
+        aria-label={`Logged in as ${user.name}`}
+        sx={{
+          width: 42,
+          height: 42,
+          bgcolor: "#1032a1",
+          color: "white",
+          fontWeight: 800,
+          border: "2px solid #0f65e7",
+          cursor: "default",
+        }}
+      >
+        {userInitial}
+      </Avatar>
+    </Tooltip>
+  );
+
   return (
     <>
-      {/* Main Navbar */}
       <AppBar
         position="sticky"
         elevation={4}
@@ -142,45 +196,71 @@ function Navbar() {
                   </Button>
                 ))}
 
-                {/* Login Button */}
-                <Button
-                  onClick={() => handleNavigation("/login")}
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#2563eb",
-                    borderRadius: 2,
-                    px: 2.5,
-                    textTransform: "none",
-                    "&:hover": {
-                      bgcolor: "#1d4ed8",
-                    },
-                  }}
-                >
-                  Login
-                </Button>
+                {isLoggedIn ? (
+                  <>
+                    <UserAvatar />
 
-                {/* Register Button */}
-                <Button
-                  onClick={() => handleNavigation("/register")}
-                  variant="outlined"
-                  sx={{
-                    color: isActive("/register") ? "white" : "#94a3b8",
-                    borderColor: isActive("/register") ? "white" : "grey.700",
-                    borderRadius: 2,
-                    px: 2.5,
-                    textTransform: "none",
-                    "&:hover": {
-                      color: "white",
-                      borderColor: "white",
-                    },
-                  }}
-                >
-                  Register
-                </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outlined"
+                      sx={{
+                        color: "#94a3b8",
+                        borderColor: "grey.700",
+                        borderRadius: 2,
+                        px: 2,
+                        textTransform: "none",
+                        "&:hover": {
+                          color: "white",
+                          borderColor: "white",
+                        },
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => handleNavigation("/login")}
+                      variant="contained"
+                      sx={{
+                        bgcolor: "#2563eb",
+                        borderRadius: 2,
+                        px: 2.5,
+                        textTransform: "none",
+                        "&:hover": {
+                          bgcolor: "#1d4ed8",
+                        },
+                      }}
+                    >
+                      Login
+                    </Button>
+
+                    <Button
+                      onClick={() => handleNavigation("/register")}
+                      variant="outlined"
+                      sx={{
+                        color: isActive("/register") ? "white" : "#94a3b8",
+                        borderColor: isActive("/register")
+                          ? "white"
+                          : "grey.700",
+                        borderRadius: 2,
+                        px: 2.5,
+                        textTransform: "none",
+                        "&:hover": {
+                          color: "white",
+                          borderColor: "white",
+                        },
+                      }}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
               </Box>
             )}
 
-            {/* Mobile Hamburger Button */}
+            {/* Mobile Menu Button */}
             {isMobile && (
               <IconButton
                 color="inherit"
@@ -195,7 +275,7 @@ function Navbar() {
         </Container>
       </AppBar>
 
-      {/* Full-Screen Mobile Navigation */}
+      {/* Mobile Navigation Drawer */}
       <Drawer
         anchor="top"
         open={mobileOpen && isMobile}
@@ -229,7 +309,6 @@ function Navbar() {
               mb: { xs: 5, sm: 7 },
             }}
           >
-            {/* Mobile Logo */}
             <Box
               onClick={() => handleNavigation("/")}
               sx={{
@@ -239,25 +318,16 @@ function Navbar() {
                 cursor: "pointer",
               }}
             >
-              <EventIcon
-                sx={{
-                  color: "#2563eb",
-                  fontSize: 32,
-                }}
-              />
+              <EventIcon sx={{ color: "#2563eb", fontSize: 32 }} />
 
               <Typography
                 variant="h6"
-                sx={{
-                  color: "#3b82f6",
-                  fontWeight: 700,
-                }}
+                sx={{ color: "#3b82f6", fontWeight: 700 }}
               >
                 EventHub
               </Typography>
             </Box>
 
-            {/* Close Button */}
             <IconButton
               onClick={handleMenuClose}
               sx={{
@@ -272,14 +342,8 @@ function Navbar() {
             </IconButton>
           </Box>
 
-          {/* Mobile Navigation Links */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 1.5,
-            }}
-          >
+          {/* Navigation Links */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             {navLinks.map((link) => (
               <Button
                 key={link.path}
@@ -307,54 +371,91 @@ function Navbar() {
             ))}
           </Box>
 
-          {/* Login and Register at Bottom */}
+          {/* Mobile Authentication Actions */}
           <Box
             sx={{
               mt: "auto",
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
               gap: 2,
               pt: 5,
               pb: 2,
             }}
           >
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => handleNavigation("/login")}
-              sx={{
-                bgcolor: "#2563eb",
-                py: 1.5,
-                borderRadius: 2,
-                textTransform: "none",
-                fontSize: "1rem",
-                "&:hover": {
-                  bgcolor: "#1d4ed8",
-                },
-              }}
-            >
-              Login
-            </Button>
+            {isLoggedIn ? (
+              <>
+                <UserAvatar />
 
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => handleNavigation("/register")}
-              sx={{
-                color: "white",
-                borderColor: "#4b5563",
-                py: 1.5,
-                borderRadius: 2,
-                textTransform: "none",
-                fontSize: "1rem",
-                "&:hover": {
-                  borderColor: "white",
-                  bgcolor: "rgba(255,255,255,0.05)",
-                },
-              }}
-            >
-              Register
-            </Button>
+                <Typography
+                  sx={{
+                    color: "white",
+                    fontWeight: 600,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {user?.name}
+                </Typography>
+
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handleLogout}
+                  sx={{
+                    color: "white",
+                    borderColor: "#4b5563",
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: "none",
+                    "&:hover": {
+                      borderColor: "white",
+                    },
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => handleNavigation("/login")}
+                  sx={{
+                    bgcolor: "#2563eb",
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    "&:hover": {
+                      bgcolor: "#1d4ed8",
+                    },
+                  }}
+                >
+                  Login
+                </Button>
+
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => handleNavigation("/register")}
+                  sx={{
+                    color: "white",
+                    borderColor: "#4b5563",
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    "&:hover": {
+                      borderColor: "white",
+                      bgcolor: "rgba(255,255,255,0.05)",
+                    },
+                  }}
+                >
+                  Register
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
       </Drawer>
