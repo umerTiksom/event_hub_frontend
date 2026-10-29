@@ -321,7 +321,6 @@ function EventDetails() {
             </Stack>
           </Grid>
 
-          {/* Reusable Attend Event Component */}
           <Grid size={{ xs: 12, md: 4 }} sx={{ bgcolor: "transparent" }}>
             <RegisterEventBox event={event} />
           </Grid>

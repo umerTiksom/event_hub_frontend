@@ -109,24 +109,28 @@ function Navbar() {
 
   // User avatar
   const UserAvatar = () => (
-    <Tooltip title={user.name}>
-      <Avatar
-        aria-label={`Logged in as ${user.name}`}
-        sx={{
-          width: 42,
-          height: 42,
-          bgcolor: "#1032a1",
-          color: "white",
-          fontWeight: 800,
-          border: "2px solid #0f65e7",
-          cursor: "default",
-        }}
+    <Tooltip title="View Profile">
+      <IconButton
+        onClick={() => handleNavigation("/profile")}
+        aria-label="Open user profile"
+        sx={{ p: 0.5 }}
       >
-        {userInitial}
-      </Avatar>
+        <Avatar
+          sx={{
+            width: 42,
+            height: 42,
+            bgcolor: "#1032a1",
+            color: "white",
+            fontWeight: 800,
+            border: "2px solid #0f65e7",
+            cursor: "pointer",
+          }}
+        >
+          {userInitial}
+        </Avatar>
+      </IconButton>
     </Tooltip>
   );
-
   return (
     <>
       <AppBar
