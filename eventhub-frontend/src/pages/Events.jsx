@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Box,
@@ -31,7 +32,7 @@ function Events() {
     totalCount: 0,
     totalPages: 0,
   });
-
+  const navigate = useNavigate();
   // Fetch events from Rails API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -117,7 +118,7 @@ function Events() {
     setSearch("");
     setSelectedCategory("All");
   };
-
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
   return (
     <Box
       sx={{
@@ -159,17 +160,20 @@ function Events() {
             learning opportunity with EventHub.
           </Typography>
 
-          <Button
-            sx={{
-              bgcolor: "#022653",
-              p: { sm: 3, md: 2 },
-              color: "rgb(183, 183, 183)",
-              fontWeight: 700,
-              maxWidth: "sm",
-            }}
-          >
-            Create new event
-          </Button>
+          {isLoggedIn && (
+            <Button
+              onClick={() => navigate("/create-event")}
+              sx={{
+                bgcolor: "#022653",
+                p: { sm: 3, md: 2 },
+                color: "rgb(183, 183, 183)",
+                fontWeight: 700,
+                maxWidth: "sm",
+              }}
+            >
+              Create new event
+            </Button>
+          )}
         </Stack>
 
         {/* Search and Category Filter */}

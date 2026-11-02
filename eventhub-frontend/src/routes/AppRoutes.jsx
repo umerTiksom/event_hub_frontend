@@ -7,7 +7,9 @@ import EventDetails from "../pages/EventDetails";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
-
+import CreateEvent from "../pages/CreateEvent";
+import EventMembers from "../components/EventMembers";
+import EditEvent from "../pages/EditEvent";
 function AppRoutes() {
   return (
     <Routes>
@@ -18,6 +20,9 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />;
+        <Route path="/create-event" element={<CreateEvent />} />
+        <Route path="/events/:id/members" element={<EventMembers />} />
+        <Route path="/events/:id/edit" element={<EditEvent />} />
       </Route>
     </Routes>
   );

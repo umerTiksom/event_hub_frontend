@@ -35,7 +35,15 @@ function Home() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  // check the user is login or not
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || null);
+    } catch {
+      return null;
+    }
+  });
+  const isLoggedIn = Boolean(user && localStorage.getItem("token"));
   // Fetch featured events from Rails API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -148,39 +156,61 @@ function Home() {
             </Typography>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <Button
-                onClick={() => navigate("/events")}
-                variant="contained"
-                endIcon={<ArrowForwardIcon />}
-                sx={{
-                  bgcolor: "#2563eb",
-                  py: 2,
-                  px: 4,
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  "&:hover": { bgcolor: "#0d38ad" },
-                }}
-              >
-                Explore Events
-              </Button>
+              {isLoggedIn ? (
+                <>
+                  <Button
+                    onClick={() => navigate("/events")}
+                    variant="contained"
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      bgcolor: "#2563eb",
+                      py: 2,
+                      px: 4,
+                      borderRadius: 10,
+                      fontWeight: 600,
+                      "&:hover": { bgcolor: "#0d38ad" },
+                    }}
+                  >
+                    Explore Events
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => navigate("/events")}
+                    variant="contained"
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      bgcolor: "#2563eb",
+                      py: 2,
+                      px: 4,
+                      borderRadius: 10,
+                      fontWeight: 600,
+                      "&:hover": { bgcolor: "#0d38ad" },
+                    }}
+                  >
+                    Explore Events
+                  </Button>
 
-              <Button
-                onClick={() => navigate("/register")}
-                variant="outlined"
-                sx={{
-                  color: "white",
-                  borderColor: "#64748b",
-                  px: 3,
-                  py: 1.5,
-                  borderRadius: 2,
-                  "&:hover": {
-                    borderColor: "white",
-                    bgcolor: "rgba(255,255,255,0.08)",
-                  },
-                }}
-              >
-                Join EventHub
-              </Button>
+                  <Button
+                    onClick={() => navigate("/register")}
+                    variant="outlined"
+                    sx={{
+                      color: "white",
+                      borderColor: "#64748b",
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 2,
+                      "&:hover": {
+                        borderColor: "white",
+                        bgcolor: "rgba(255,255,255,0.08)",
+                      },
+                    }}
+                  >
+                    Join EventHub
+                  </Button>
+                </>
+              )}
             </Stack>
           </Box>
         </Container>
@@ -340,57 +370,114 @@ function Home() {
 
       {/* Call To Action */}
       <Container maxWidth="xl" sx={{ py: 8 }}>
-        <Box
-          sx={{
-            background:
-              "linear-gradient(120deg, #000149 0%, #0e1326 60%, #285be5 100%)",
-            color: "white",
-            borderRadius: 4,
-            p: { xs: 4, md: 7 },
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            variant="h4"
-            component="h2"
-            sx={{
-              fontWeight: 750,
-              mb: 2,
-              fontSize: { xs: "1.8rem", md: "2.5rem" },
-            }}
-          >
-            Be Part of Something Amazing
-          </Typography>
+        {isLoggedIn ? (
+          <>
+            <Box
+              sx={{
+                background:
+                  "linear-gradient(120deg, #000149 0%, #0e1326 60%, #285be5 100%)",
+                color: "white",
+                borderRadius: 4,
+                p: { xs: 4, md: 7 },
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                variant="h4"
+                component="h2"
+                sx={{
+                  fontWeight: 750,
+                  mb: 2,
+                  fontSize: { xs: "1.8rem", md: "2.5rem" },
+                }}
+              >
+                Create Your Event Today
+              </Typography>
 
-          <Typography
-            sx={{
-              color: "#cbd5e1",
-              maxWidth: 600,
-              mx: "auto",
-              mb: 3,
-              lineHeight: 1.8,
-            }}
-          >
-            Join EventHub to discover upcoming events and connect with people
-            who share your interests.
-          </Typography>
+              <Typography
+                sx={{
+                  color: "#cbd5e1",
+                  maxWidth: 600,
+                  mx: "auto",
+                  mb: 3,
+                  lineHeight: 1.8,
+                }}
+              >
+                Create and Manage your event through EventHub
+              </Typography>
 
-          <Button
-            onClick={() => navigate("/register")}
-            variant="contained"
-            endIcon={<ArrowForwardIcon />}
-            sx={{
-              bgcolor: "#2563eb",
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontWeight: 650,
-              "&:hover": { bgcolor: "#1d4ed8" },
-            }}
-          >
-            Get Started
-          </Button>
-        </Box>
+              <Button
+                onClick={() => navigate("/create-event")}
+                variant="contained"
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  bgcolor: "#2563eb",
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontWeight: 650,
+                  "&:hover": { bgcolor: "#1d4ed8" },
+                }}
+              >
+                Create Event
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <>
+            <Box
+              sx={{
+                background:
+                  "linear-gradient(120deg, #000149 0%, #0e1326 60%, #285be5 100%)",
+                color: "white",
+                borderRadius: 4,
+                p: { xs: 4, md: 7 },
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                variant="h4"
+                component="h2"
+                sx={{
+                  fontWeight: 750,
+                  mb: 2,
+                  fontSize: { xs: "1.8rem", md: "2.5rem" },
+                }}
+              >
+                Be Part of Something Amazing
+              </Typography>
+
+              <Typography
+                sx={{
+                  color: "#cbd5e1",
+                  maxWidth: 600,
+                  mx: "auto",
+                  mb: 3,
+                  lineHeight: 1.8,
+                }}
+              >
+                Join EventHub to discover upcoming events and connect with
+                people who share your interests.
+              </Typography>
+
+              <Button
+                onClick={() => navigate("/register")}
+                variant="contained"
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  bgcolor: "#2563eb",
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontWeight: 650,
+                  "&:hover": { bgcolor: "#1d4ed8" },
+                }}
+              >
+                Get Started
+              </Button>
+            </Box>
+          </>
+        )}
       </Container>
 
       {/* Footer */}

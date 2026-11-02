@@ -70,7 +70,15 @@ function EventDetails() {
   const [event, setEvent] = useState(null);
   const [fetching, setFetching] = useState(true);
   const [fetchError, setFetchError] = useState("");
-
+  const [currentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  });
+  const isEventCreator =
+    currentUser && Number(event?.user_id) === Number(currentUser.id);
   useEffect(() => {
     let active = true;
 
@@ -322,7 +330,42 @@ function EventDetails() {
           </Grid>
 
           <Grid size={{ xs: 12, md: 4 }} sx={{ bgcolor: "transparent" }}>
-            <RegisterEventBox event={event} />
+            {isEventCreator ? (
+              <Box
+                sx={{
+                  bgcolor: "#111827",
+                  border: "1px solid #1e40af",
+                  borderRadius: 3,
+                  p: 3,
+                }}
+              >
+                <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+                  Event Members
+                </Typography>
+
+                <Typography color="#cbd5e1" variant="body2" sx={{ mb: 3 }}>
+                  View all users who have registered for this event.
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => navigate(`/events/${event.id}/members`)}
+                  sx={{
+                    bgcolor: "#2563eb",
+                    py: 1.3,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    "&:hover": {
+                      bgcolor: "#1d4ed8",
+                    },
+                  }}
+                >
+                  View Members
+                </Button>
+              </Box>
+            ) : (
+              <RegisterEventBox event={event} />
+            )}
           </Grid>
         </Grid>
       </Container>
