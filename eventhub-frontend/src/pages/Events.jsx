@@ -129,7 +129,7 @@ function Events() {
     >
       <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
         {/* Page Heading */}
-        <Stack spacing={1} sx={{ mb: 4 }} direction="column">
+        <Stack spacing={2} sx={{ mb: 4 }} direction="column">
           <Typography
             variant="subtitle2"
             sx={{ color: "#60a5fa", fontWeight: 700 }}
@@ -151,7 +151,7 @@ function Events() {
             variant="h6"
             sx={{
               pt: 2,
-
+              mb: 3,
               maxWidth: 600,
               fontWeight: 400,
             }}
@@ -164,11 +164,14 @@ function Events() {
             <Button
               onClick={() => navigate("/create-event")}
               sx={{
-                bgcolor: "#022653",
+                bgcolor: "#145cb5",
                 p: { sm: 3, md: 2 },
-                color: "rgb(183, 183, 183)",
+                color: "white",
                 fontWeight: 700,
                 maxWidth: "sm",
+                "&:hover": {
+                  bgcolor: "#1d4ed8",
+                },
               }}
             >
               Create new event

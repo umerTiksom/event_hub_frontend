@@ -140,9 +140,7 @@ function Profile() {
       };
 
       // Fetch current user's registrations
-      const response = await api.get("/registrations", {
-        headers,
-      });
+      const response = await api.get("/me/registrations", { headers });
 
       const registrations = Array.isArray(response.data)
         ? response.data
@@ -175,6 +173,9 @@ function Profile() {
       // Remove failed or empty event responses
       setEnrolledEvents(eventsData.filter(Boolean));
     } catch (err) {
+      console.error("Enrolled Events Error:", err);
+      console.log("Status:", err.response?.status);
+      console.log("Response:", err.response?.data);
       console.error("Enrolled Events Error:", err);
 
       setEnrolledError(
@@ -535,8 +536,10 @@ function Profile() {
                   >
                     <CardContent>
                       <Stack
+                        sx={{
+                          justifyContent: "space-between",
+                        }}
                         direction={{ xs: "column", sm: "row" }}
-                        justifyContent="space-between"
                         alignItems={{
                           xs: "flex-start",
                           sm: "center",
@@ -583,13 +586,6 @@ function Profile() {
                 ))}
               </Stack>
             )}
-
-            <Button
-              sx={{ mt: 3, textTransform: "none" }}
-              onClick={() => navigate("/events")}
-            >
-              Browse Events
-            </Button>
           </CardContent>
         </Card>
 

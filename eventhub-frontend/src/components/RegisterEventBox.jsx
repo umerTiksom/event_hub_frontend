@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -23,7 +23,6 @@ const fieldStyles = {
   "& .MuiInputLabel-root": {
     color: "#ffffff",
   },
-
   "& .MuiInputLabel-root.Mui-focused": {
     color: "#60a5fa",
   },
@@ -47,6 +46,7 @@ function RegisterEventBox({ event }) {
   const location = useLocation();
 
   const [checkingAuth, setCheckingAuth] = useState(false);
+  const [checkingRegistration, setCheckingRegistration] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -59,6 +59,62 @@ function RegisterEventBox({ event }) {
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("success");
+
+  // Check whether the current user has already registered
+  useEffect(() => {
+    let active = true;
+
+    const checkRegistration = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token?.trim() || !event?.id) {
+        setCheckingRegistration(false);
+        return;
+      }
+
+      setCheckingRegistration(true);
+
+      try {
+        const response = await api.get("/me/registrations", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const registrations = Array.isArray(response.data)
+          ? response.data
+          : (response.data?.registrations ?? response.data?.data ?? []);
+
+        const alreadyRegistered = registrations.some(
+          (registration) => Number(registration.event_id) === Number(event.id),
+        );
+
+        if (active) {
+          setRegistered(alreadyRegistered);
+        }
+      } catch (error) {
+        console.error("Registration check error:", error);
+
+        if (active) {
+          setMessage(
+            error.response?.data?.message ||
+              "Unable to check your registration status.",
+          );
+          setMessageType("error");
+        }
+      } finally {
+        if (active) {
+          setCheckingRegistration(false);
+        }
+      }
+    };
+
+    checkRegistration();
+
+    return () => {
+      active = false;
+    };
+  }, [event?.id]);
 
   const redirectToLogin = () => {
     localStorage.removeItem("token");
@@ -73,9 +129,15 @@ function RegisterEventBox({ event }) {
     });
   };
 
-  // Verify login with the Rails API before opening the form
+  // Verify login before opening the registration form
   const handleRegister = async () => {
-    if (!event?.id || checkingAuth || registering || registered) {
+    if (
+      !event?.id ||
+      checkingAuth ||
+      checkingRegistration ||
+      registering ||
+      registered
+    ) {
       return;
     }
 
@@ -123,11 +185,11 @@ function RegisterEventBox({ event }) {
     }));
   };
 
-  // Submit event registration to the Rails API
+  // Submit event registration
   const submitRegistration = async (e) => {
     e.preventDefault();
 
-    if (registering || !event?.id) return;
+    if (registering || registered || !event?.id) return;
 
     const token = localStorage.getItem("token");
 
@@ -161,13 +223,14 @@ function RegisterEventBox({ event }) {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         },
       );
 
       setRegistered(true);
       setFormOpen(false);
+
       setMessage(
         response.data?.message ||
           "You have successfully registered for this event!",
@@ -194,18 +257,26 @@ function RegisterEventBox({ event }) {
             .join(", ")
         : "";
 
-      setMessage(
+      const errorMessage =
         data?.message ||
-          data?.error ||
-          errors ||
-          (status === 409
-            ? "You may already be registered for this event."
-            : status === 422
-              ? "Please check your registration details."
-              : "Registration failed. Please try again."),
-      );
+        data?.error ||
+        errors ||
+        "Registration failed. Please try again.";
 
-      setMessageType("error");
+      // Handle duplicate registration response
+      if (
+        status === 409 ||
+        (status === 422 &&
+          /already|registered|taken|duplicate/i.test(errorMessage))
+      ) {
+        setRegistered(true);
+        setFormOpen(false);
+        setMessage("You are already registered for this event.");
+      } else {
+        setMessage(errorMessage);
+      }
+
+      setMessageType(status === 409 || status === 422 ? "success" : "error");
     } finally {
       setRegistering(false);
     }
@@ -250,9 +321,13 @@ function RegisterEventBox({ event }) {
           fullWidth
           variant="contained"
           size="large"
-          disabled={checkingAuth || registering || registered}
+          disabled={
+            checkingAuth || checkingRegistration || registering || registered
+          }
           startIcon={
-            checkingAuth || registering ? null : <EventAvailableIcon />
+            checkingAuth || registering || checkingRegistration ? null : (
+              <EventAvailableIcon />
+            )
           }
           onClick={handleRegister}
           sx={{
@@ -270,7 +345,12 @@ function RegisterEventBox({ event }) {
             },
           }}
         >
-          {checkingAuth ? (
+          {checkingRegistration ? (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <CircularProgress size={18} color="inherit" />
+              <span>Checking Registration...</span>
+            </Stack>
+          ) : checkingAuth ? (
             <Stack direction="row" alignItems="center" spacing={1}>
               <CircularProgress size={18} color="inherit" />
               <span>Checking Login...</span>
@@ -281,7 +361,7 @@ function RegisterEventBox({ event }) {
               <span>Registering...</span>
             </Stack>
           ) : registered ? (
-            "Registered Successfully"
+            "Already Registered"
           ) : (
             "Register for Event"
           )}
@@ -296,7 +376,9 @@ function RegisterEventBox({ event }) {
             mt: 2,
           }}
         >
-          Login is required to register
+          {registered
+            ? "You have already registered for this event."
+            : "Login is required to register"}
         </Typography>
       </Box>
 

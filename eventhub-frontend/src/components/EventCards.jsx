@@ -29,14 +29,6 @@ function EventCard({ image, title, category, location, date, id }) {
           },
         }}
       >
-        <CardMedia
-          component="img"
-          height="210"
-          image={image}
-          alt={title}
-          sx={{ objectFit: "cover" }}
-        />
-
         <CardContent sx={{ p: 2.5 }}>
           <Chip
             label={category}
