@@ -51,7 +51,7 @@ function Events() {
 
         const params = {
           page: page,
-          per_page: 3,
+          per_page: 12,
         };
 
         if (search.trim()) {
