@@ -102,7 +102,7 @@ function Events() {
 
         setError(
           err.response?.data?.message ||
-            "Events load nahi ho sake. Please try again.",
+            "Unable to load the event. Please try again.",
         );
 
         setEvents([]);
@@ -226,7 +226,7 @@ function Events() {
                 },
               },
               "& input::placeholder": {
-                color: "#94a3b8",
+                color: "#f1f3f6",
                 opacity: 1,
               },
             }}
@@ -256,6 +256,9 @@ function Events() {
                 borderRadius: 2,
                 "& fieldset": {
                   borderColor: "#334155",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#2563eb",
                 },
               },
               "& .MuiSvgIcon-root": {
