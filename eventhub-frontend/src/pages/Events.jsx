@@ -66,8 +66,6 @@ function Events() {
           params,
         });
 
-        console.log("Rails API Response:", response.data);
-
         // Rails returns { status, data, pagination }
         const data = Array.isArray(response.data.data)
           ? response.data.data

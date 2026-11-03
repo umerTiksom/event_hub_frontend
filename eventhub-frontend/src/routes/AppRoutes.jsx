@@ -11,6 +11,7 @@ import CreateEvent from "../pages/CreateEvent";
 import EventMembers from "../components/EventMembers";
 import EditEvent from "../pages/EditEvent";
 import ProtectedRoute from "../components/ProtectedRoute";
+import NotFound from "../pages/NotFound";
 function AppRoutes() {
   return (
     <Routes>
@@ -28,6 +29,9 @@ function AppRoutes() {
           <Route path="/events/:id/members" element={<EventMembers />} />
           <Route path="/events/:id/edit" element={<EditEvent />} />
         </Route>
+
+        {/* route for 404 page */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
