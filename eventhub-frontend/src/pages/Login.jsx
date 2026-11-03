@@ -12,16 +12,17 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-
+import { useAuth } from "../context/AuthContext";
 import LoginIcon from "@mui/icons-material/Login";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../api/axios";
 
 function Login() {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -73,18 +74,16 @@ function Login() {
         return;
       }
 
-      localStorage.setItem("token", token);
-
       const user = response.data.data?.user;
 
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      }
+      login(user, token);
 
       setSuccess(response.data.message || "Login successful!");
 
       setTimeout(() => {
-        navigate("/");
+        navigate(location.state?.from?.pathname || "/", {
+          replace: true,
+        });
       }, 500);
     } catch (err) {
       const status = err.response?.status;

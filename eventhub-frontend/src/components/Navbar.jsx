@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import {
   AppBar,
@@ -21,6 +21,8 @@ import EventIcon from "@mui/icons-material/Event";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
+import { useAuth } from "../context/AuthContext";
+
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,35 +30,13 @@ function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  // Context API
+  const { user, token, logout } = useAuth();
+
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user")) || null;
-    } catch {
-      return null;
-    }
-  });
 
   const currentPath = location.pathname;
-  const isLoggedIn = Boolean(user && localStorage.getItem("token"));
-
-  useEffect(() => {
-    const loadUser = () => {
-      try {
-        setUser(JSON.parse(localStorage.getItem("user")) || null);
-      } catch {
-        setUser(null);
-      }
-    };
-
-    loadUser();
-
-    window.addEventListener("authChanged", loadUser);
-
-    return () => {
-      window.removeEventListener("authChanged", loadUser);
-    };
-  }, [location.pathname]);
+  const isLoggedIn = Boolean(user && token);
 
   const handleMenuOpen = () => {
     setMobileOpen(true);
@@ -71,12 +51,9 @@ function Navbar() {
     handleMenuClose();
   };
 
-  // Logout user
+  // Logout user using AuthContext
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    setUser(null);
+    logout();
     handleMenuClose();
     navigate("/login");
   };
@@ -131,6 +108,7 @@ function Navbar() {
       </IconButton>
     </Tooltip>
   );
+
   return (
     <>
       <AppBar
@@ -326,7 +304,10 @@ function Navbar() {
 
               <Typography
                 variant="h6"
-                sx={{ color: "#3b82f6", fontWeight: 700 }}
+                sx={{
+                  color: "#3b82f6",
+                  fontWeight: 700,
+                }}
               >
                 EventHub
               </Typography>
@@ -347,7 +328,13 @@ function Navbar() {
           </Box>
 
           {/* Navigation Links */}
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+            }}
+          >
             {navLinks.map((link) => (
               <Button
                 key={link.path}

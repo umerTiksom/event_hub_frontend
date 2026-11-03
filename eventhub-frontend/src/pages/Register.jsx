@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   Box,
   Container,
@@ -10,8 +11,10 @@ import {
   Alert,
   Link as MuiLink,
 } from "@mui/material";
+
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import { useNavigate, Link } from "react-router-dom";
+
 import api from "../api/axios";
 
 function Register() {
@@ -40,6 +43,9 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent multiple registration requests
+    if (loading) return;
+
     setError("");
     setSuccess("");
     setLoading(true);
@@ -51,8 +57,8 @@ function Register() {
 
       setSuccess(response.data.message || "Account created successfully!");
 
-      // Registration par token generate ya store nahi hoga.
-      // User ko login page par redirect karein.
+      // Registration does not automatically log in the user.
+      // Redirect to login page after successful registration.
       setTimeout(() => {
         navigate("/login");
       }, 1000);
@@ -121,12 +127,14 @@ function Register() {
             </Typography>
           </Stack>
 
+          {/* Error Alert */}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
+          {/* Success Alert */}
           {success && (
             <Alert severity="success" sx={{ mb: 2 }}>
               {success}
@@ -143,6 +151,7 @@ function Register() {
                 onChange={handleChange}
                 autoComplete="name"
                 required
+                disabled={loading || Boolean(success)}
                 sx={fieldStyles}
               />
 
@@ -155,6 +164,7 @@ function Register() {
                 onChange={handleChange}
                 autoComplete="email"
                 required
+                disabled={loading || Boolean(success)}
                 sx={fieldStyles}
               />
 
@@ -167,6 +177,7 @@ function Register() {
                 onChange={handleChange}
                 autoComplete="tel"
                 required
+                disabled={loading || Boolean(success)}
                 sx={fieldStyles}
               />
 
@@ -184,6 +195,7 @@ function Register() {
                   },
                 }}
                 required
+                disabled={loading || Boolean(success)}
                 sx={fieldStyles}
               />
 
@@ -191,24 +203,42 @@ function Register() {
                 type="submit"
                 variant="contained"
                 size="large"
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 startIcon={<PersonAddAlt1Icon />}
                 sx={{
                   py: 1.5,
                   borderRadius: 2,
                   bgcolor: "#3157d5",
                   fontWeight: 700,
+
                   "&:hover": {
                     bgcolor: "#2445b5",
                   },
+
+                  "&.Mui-disabled": {
+                    bgcolor: "#475569",
+                    color: "#ffffff",
+                  },
                 }}
               >
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading
+                  ? "Creating Account..."
+                  : success
+                    ? "Account Created"
+                    : "Create Account"}
               </Button>
 
               <Typography textAlign="center" sx={{ color: "grey.400" }}>
                 Already have an account?{" "}
-                <MuiLink component={Link} to="/login" underline="hover">
+                <MuiLink
+                  component={Link}
+                  to="/login"
+                  underline="hover"
+                  sx={{
+                    color: "#8ba7ff",
+                    fontWeight: 600,
+                  }}
+                >
                   Login
                 </MuiLink>
               </Typography>
@@ -224,19 +254,24 @@ const fieldStyles = {
   "& input": {
     color: "black",
   },
+
   "& input::placeholder": {
     color: "black",
     opacity: 1,
   },
+
   "& .MuiOutlinedInput-root": {
     bgcolor: "#c2cbdd",
     borderRadius: 2,
+
     "& fieldset": {
       borderColor: "#334155",
     },
+
     "&:hover fieldset": {
       borderColor: "#475569",
     },
+
     "&.Mui-focused fieldset": {
       borderColor: "#2563eb",
     },

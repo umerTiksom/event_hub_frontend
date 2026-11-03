@@ -13,26 +13,35 @@ import {
   Chip,
   CircularProgress,
   Button,
+  Pagination,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
 import EventCard from "../components/EventCards";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [refresh, setRefresh] = useState(0);
 
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalCount: 0,
-    totalPages: 0,
+    totalPages: 1,
   });
+
   const navigate = useNavigate();
+  const { user, token } = useAuth();
+
+  const isLoggedIn = Boolean(user && token);
+
   // Fetch events from Rails API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -41,7 +50,8 @@ function Events() {
         setError("");
 
         const params = {
-          page: 1,
+          page: page,
+          per_page: 3,
         };
 
         if (search.trim()) {
@@ -52,7 +62,9 @@ function Events() {
           params.category = selectedCategory;
         }
 
-        const response = await api.get("/events", { params });
+        const response = await api.get("/events", {
+          params,
+        });
 
         console.log("Rails API Response:", response.data);
 
@@ -81,7 +93,7 @@ function Events() {
         setEvents(formattedEvents);
 
         setPagination({
-          currentPage: response.data.pagination?.current_page ?? 1,
+          currentPage: response.data.pagination?.current_page ?? page,
           totalCount: response.data.pagination?.total_count ?? data.length,
           totalPages: response.data.pagination?.total_pages ?? 1,
         });
@@ -96,13 +108,19 @@ function Events() {
         );
 
         setEvents([]);
+
+        setPagination({
+          currentPage: 1,
+          totalCount: 0,
+          totalPages: 1,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvents();
-  }, [search, selectedCategory]);
+  }, [page, search, selectedCategory, refresh]);
 
   // Generate category options from fetched events
   const categories = [
@@ -114,17 +132,17 @@ function Events() {
     ),
   ];
 
+  // Clear search and category filters
   const clearFilters = () => {
     setSearch("");
     setSelectedCategory("All");
+    setPage(1);
   };
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+
   return (
     <Box
       sx={{
-        bgcolor: "black",
         color: "white",
-        minHeight: "100vh",
       }}
     >
       <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
@@ -190,7 +208,10 @@ function Events() {
             variant="outlined"
             placeholder="Search by event name or description..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             sx={{
               "& .MuiOutlinedInput-root": {
                 color: "white",
@@ -225,7 +246,10 @@ function Events() {
           <TextField
             select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setPage(1);
+            }}
             sx={{
               minWidth: { xs: "100%", sm: 200 },
               "& .MuiOutlinedInput-root": {
@@ -270,11 +294,7 @@ function Events() {
             <Chip
               label="Retry"
               clickable
-              onClick={() => {
-                setSearch((previous) => previous);
-                // Trigger a fresh request even when search is unchanged
-                window.location.reload();
-              }}
+              onClick={() => setRefresh((prev) => prev + 1)}
               sx={{
                 color: "white",
                 bgcolor: "#1e3a8a",
@@ -299,7 +319,10 @@ function Events() {
               {selectedCategory !== "All" && (
                 <Chip
                   label={selectedCategory}
-                  onDelete={() => setSelectedCategory("All")}
+                  onDelete={() => {
+                    setSelectedCategory("All");
+                    setPage(1);
+                  }}
                   sx={{
                     color: "#bfdbfe",
                     bgcolor: "#1e3a8a",
@@ -310,21 +333,52 @@ function Events() {
 
             {/* Event Cards */}
             {events.length > 0 ? (
-              <Grid container spacing={3}>
-                {events.map((event) => (
-                  <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                    <EventCard
-                      id={event.id}
-                      title={event.title}
-                      description={event.description}
-                      category={event.category}
-                      location={event.location}
-                      date={event.date}
-                      image={event.image}
+              <>
+                <Grid container spacing={3}>
+                  {events.map((event) => (
+                    <Grid key={event.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                      <EventCard
+                        id={event.id}
+                        title={event.title}
+                        description={event.description}
+                        category={event.category}
+                        location={event.location}
+                        date={event.date}
+                        image={event.image}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    mt={5}
+                  >
+                    <Pagination
+                      count={pagination.totalPages}
+                      page={pagination.currentPage}
+                      onChange={(event, value) => setPage(value)}
+                      color="primary"
+                      disabled={loading}
+                      size="large"
+                      sx={{
+                        mt: 4,
+                        "& .MuiPaginationItem-root": {
+                          color: "white",
+                        },
+                        "& .Mui-selected": {
+                          bgcolor: "#2563eb !important",
+                          color: "white",
+                        },
+                      }}
                     />
-                  </Grid>
-                ))}
-              </Grid>
+                  </Box>
+                )}
+              </>
             ) : (
               /* No Events Found */
               <Box
