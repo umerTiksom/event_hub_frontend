@@ -25,6 +25,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import LocalActivityIcon from "@mui/icons-material/LocalActivity";
 
 import api from "../api/axios";
+import Loading from "../components/Loading";
 
 function Profile() {
   const navigate = useNavigate();
@@ -518,7 +519,7 @@ function Profile() {
                   py: 3,
                 }}
               >
-                <CircularProgress size={26} />
+                <Loading size="24" />
               </Box>
             ) : enrolledError ? (
               <Alert severity="warning">{enrolledError}</Alert>

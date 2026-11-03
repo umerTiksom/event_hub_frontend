@@ -21,6 +21,7 @@ import SportsBasketballIcon from "@mui/icons-material/SportsBasketball";
 import CategoryBox from "../components/home/CategoryBox";
 import EventCard from "../components/EventCards";
 import api from "../api/axios";
+import Loading from "../components/Loading";
 
 const categories = [
   { name: "Technology", icon: <CodeIcon /> },
@@ -322,7 +323,7 @@ function Home() {
                 py: 8,
               }}
             >
-              <CircularProgress sx={{ color: "#60a5fa" }} />
+              <Loading />
             </Box>
           ) : error ? (
             <Box sx={{ textAlign: "center", py: 5 }}>

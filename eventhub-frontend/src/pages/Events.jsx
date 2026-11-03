@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import EventCard from "../components/EventCards";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import Loading from "../components/Loading";
 
 function Events() {
   const [events, setEvents] = useState([]);
@@ -95,8 +96,6 @@ function Events() {
           totalCount: response.data.pagination?.total_count ?? data.length,
           totalPages: response.data.pagination?.total_pages ?? 1,
         });
-
-        console.log("Fetched Events:", formattedEvents);
       } catch (err) {
         console.error("Failed to fetch events:", err);
 
@@ -283,7 +282,7 @@ function Events() {
               py: 8,
             }}
           >
-            <CircularProgress sx={{ color: "#60a5fa" }} />
+            <Loading />
           </Box>
         ) : error ? (
           /* Error State */

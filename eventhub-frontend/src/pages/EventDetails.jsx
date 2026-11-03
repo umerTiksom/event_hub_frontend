@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -21,6 +20,7 @@ import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 
 import api from "../api/axios";
 import RegisterEventBox from "../components/RegisterEventBox";
+import Loading from "../components/Loading";
 
 const formatEventDate = (date) => {
   if (!date) return "Date not available";
@@ -77,8 +77,7 @@ function EventDetails() {
       return null;
     }
   });
-  const isEventCreator =
-    currentUser && Number(event?.user_id) === Number(currentUser.id);
+  const isEventCreator = currentUser && event?.user_id === currentUser.id;
   useEffect(() => {
     let active = true;
 
@@ -130,7 +129,7 @@ function EventDetails() {
   if (fetching) {
     return (
       <PageState>
-        <CircularProgress sx={{ color: "#60a5fa" }} />
+        <Loading />
         <Typography color="#cbd5e1">Loading event details...</Typography>
       </PageState>
     );
@@ -139,13 +138,16 @@ function EventDetails() {
   if (fetchError || !event) {
     return (
       <PageState>
-        <Typography variant="h5" fontWeight={700}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+          }}
+        >
           Unable to Load Event
         </Typography>
 
-        <Alert severity="error">
-          {fetchError || "This event is not available."}
-        </Alert>
+        <Alert severity="error">{fetchError}</Alert>
 
         <Button variant="contained" onClick={() => navigate("/events")}>
           Browse Events
