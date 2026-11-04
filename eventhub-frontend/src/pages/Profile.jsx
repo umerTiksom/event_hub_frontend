@@ -13,7 +13,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-
 import { useNavigate } from "react-router-dom";
 
 import PersonOutlineIcon from "@mui/icons-material/Person2Outlined";
@@ -54,7 +53,6 @@ function Profile() {
       }
 
       setUser(savedUser);
-
       loadEvents(token, savedUser);
       loadEnrolledEvents(token);
     } catch (err) {
@@ -197,32 +195,6 @@ function Profile() {
     navigate("/login", { replace: true });
   };
 
-  // Delete created event
-  const handleDeleteEvent = async (eventId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this event?",
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const token = localStorage.getItem("token");
-
-      await api.delete(`/events/${eventId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Remove deleted event from UI
-      setEvents((previousEvents) =>
-        previousEvents.filter((event) => event.id !== eventId),
-      );
-    } catch (err) {
-      alert(err.response?.data?.message || "Unable to delete this event.");
-    }
-  };
-
   const userInitial = user?.name?.trim()?.charAt(0)?.toUpperCase() || "?";
 
   if (!user && loading) {
@@ -253,11 +225,10 @@ function Profile() {
         {/* Profile Heading */}
         <Typography
           variant="h2"
-          fontWeight={800}
           mb={1}
           sx={{
+            fontWeight: 800,
             color: "#3b82f6",
-            fontWeight: 600,
           }}
         >
           My Profile
@@ -298,8 +269,13 @@ function Profile() {
               </Avatar>
 
               <Box>
-                <Typography variant="h5" fontWeight={700}>
-                  {user.name}
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
+                  {user.name.toUpperCase()}
                 </Typography>
 
                 <Typography sx={{ color: "rgba(57, 56, 56, 0.6)" }}>
@@ -593,10 +569,6 @@ function Profile() {
         {/* Account Settings */}
         <Card sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }} mb={2}>
-              Account Settings
-            </Typography>
-
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
@@ -613,20 +585,6 @@ function Profile() {
                 }}
               >
                 Logout
-              </Button>
-
-              <Button
-                fullWidth
-                color="error"
-                variant="outlined"
-                startIcon={<DeleteOutlineIcon />}
-                onClick={() => navigate("/profile/delete-account")}
-                sx={{
-                  textTransform: "none",
-                  py: 1.2,
-                }}
-              >
-                Delete Account
               </Button>
             </Stack>
           </CardContent>
