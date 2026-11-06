@@ -22,6 +22,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupIcon from "@mui/icons-material/Group";
 import LocalActivityIcon from "@mui/icons-material/LocalActivity";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 
 import api from "../api/axios";
 import Loading from "../components/Loading";
@@ -41,35 +42,38 @@ function Profile() {
   const [loadingEnrolled, setLoadingEnrolled] = useState(true);
   const [enrolledError, setEnrolledError] = useState("");
 
-  // Check authentication and load both event sections
+  // Track actions in progress to prevent duplicate requests
+  const [cancellingRegistrationId, setCancellingRegistrationId] =
+    useState(null);
+  const [deletingEventId, setDeletingEventId] = useState(null);
+
   useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (!savedUser || !token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     try {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
-      const token = localStorage.getItem("token");
-
-      if (!savedUser || !token) {
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      setUser(savedUser);
-      loadEvents(token, savedUser);
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      loadEvents(token, parsedUser);
       loadEnrolledEvents(token);
     } catch (err) {
       console.error("Profile Error:", err);
-
-      setError("Unable to load your profile.");
+      setError("Unable to load your profile. Please log in again.");
       setLoading(false);
       setLoadingEnrolled(false);
     }
   }, [navigate]);
 
-  // Fetch all created events
+  // Fetch all events created by the current user
   const loadEvents = async (token, currentUser) => {
     try {
       setError("");
 
-      // First page fetch
       const firstResponse = await api.get("/events", {
         params: { page: 1 },
         headers: {
@@ -78,18 +82,16 @@ function Profile() {
       });
 
       const firstData = firstResponse.data;
-
       let allEvents = Array.isArray(firstData)
         ? firstData
         : firstData?.data || [];
 
       const totalPages = firstData?.pagination?.total_pages || 1;
 
-      // Fetch remaining pages
       if (totalPages > 1) {
         const remainingRequests = [];
 
-        for (let page = 2; page <= totalPages; page++) {
+        for (let page = 2; page <= totalPages; page += 1) {
           remainingRequests.push(
             api.get("/events", {
               params: { page },
@@ -111,7 +113,6 @@ function Profile() {
         });
       }
 
-      // Filter events created by current user
       const userEvents = allEvents.filter(
         (event) => String(event.user_id) === String(currentUser.id),
       );
@@ -119,7 +120,6 @@ function Profile() {
       setEvents(userEvents);
     } catch (err) {
       console.error("Created Events Error:", err);
-
       setError(
         err.response?.data?.message ||
           "Could not load created events. Please check your API.",
@@ -129,7 +129,7 @@ function Profile() {
     }
   };
 
-  // Fetch events in which current user is enrolled
+  // Fetch events in which the current user is enrolled
   const loadEnrolledEvents = async (token) => {
     try {
       setEnrolledError("");
@@ -138,14 +138,14 @@ function Profile() {
         Authorization: `Bearer ${token}`,
       };
 
-      // Fetch current user's registrations
+      // The API returns the current user's registration records.
       const response = await api.get("/me/registrations", { headers });
 
       const registrations = Array.isArray(response.data)
         ? response.data
         : response.data?.data || [];
 
-      // Fetch event details for each registration
+      // Fetch each event and keep its registration ID for cancellation.
       const eventRequests = registrations.map(async (registration) => {
         try {
           const eventResponse = await api.get(
@@ -159,23 +159,25 @@ function Profile() {
             eventResponse.data?.data ??
             eventResponse.data;
 
-          return eventData;
+          if (!eventData || !eventData.id) {
+            return null;
+          }
+
+          return {
+            ...eventData,
+            registration_id: registration.id,
+          };
         } catch (err) {
           console.error(`Unable to load event ${registration.event_id}:`, err);
-
           return null;
         }
       });
 
       const eventsData = await Promise.all(eventRequests);
-
-      // Remove failed or empty event responses
       setEnrolledEvents(eventsData.filter(Boolean));
     } catch (err) {
       console.error("Enrolled Events Error:", err);
-      console.log("Status:", err.response?.status);
-      console.log("Response:", err.response?.data);
-      console.error("Enrolled Events Error:", err);
+      console.error("Response:", err.response?.data);
 
       setEnrolledError(
         err.response?.data?.message || "Unable to load enrolled events.",
@@ -185,13 +187,82 @@ function Profile() {
     }
   };
 
+  // Delete an event created by the current user
+  const handleDeleteEvent = async (eventId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this event? Its registrations will also be removed.",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      setDeletingEventId(eventId);
+
+      await api.delete(`/events/${eventId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setEvents((previousEvents) =>
+        previousEvents.filter((event) => event.id !== eventId),
+      );
+    } catch (err) {
+      console.error("Delete Event Error:", err);
+      window.alert(
+        err.response?.data?.message ||
+          "Unable to delete this event. Please try again.",
+      );
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
+  // Cancel the current user's registration for an event
+  const handleCancelRegistration = async (event) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to cancel your registration for "${event.name}"?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      setCancellingRegistrationId(event.registration_id);
+
+      await api.delete(
+        `/events/${event.id}/registrations/${event.registration_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Remove the event from the UI after the API confirms deletion.
+      setEnrolledEvents((previousEvents) =>
+        previousEvents.filter(
+          (item) => item.registration_id !== event.registration_id,
+        ),
+      );
+    } catch (err) {
+      console.error("Cancel Registration Error:", err);
+      window.alert(
+        err.response?.data?.message ||
+          "Unable to cancel registration. Please try again.",
+      );
+    } finally {
+      setCancellingRegistrationId(null);
+    }
+  };
+
   // Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
     window.dispatchEvent(new Event("authChanged"));
-
     navigate("/login", { replace: true });
   };
 
@@ -269,13 +340,8 @@ function Profile() {
               </Avatar>
 
               <Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                  }}
-                >
-                  {user.name.toUpperCase()}
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  {(user.name || "User").toUpperCase()}
                 </Typography>
 
                 <Typography sx={{ color: "rgba(57, 56, 56, 0.6)" }}>
@@ -289,12 +355,10 @@ function Profile() {
             <Stack spacing={2}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <PersonOutlineIcon color="primary" />
-
                 <Box>
                   <Typography variant="caption" sx={{ color: "#3b82f6" }}>
                     Full Name
                   </Typography>
-
                   <Typography sx={{ fontWeight: 600 }}>
                     {user.name || "Not provided"}
                   </Typography>
@@ -303,12 +367,10 @@ function Profile() {
 
               <Stack direction="row" spacing={1} alignItems="center">
                 <PersonOutlineIcon color="primary" />
-
                 <Box>
                   <Typography variant="caption" sx={{ color: "#3b82f6" }}>
                     Email Address
                   </Typography>
-
                   <Typography sx={{ fontWeight: 600 }}>
                     {user.email || "Not provided"}
                   </Typography>
@@ -317,12 +379,10 @@ function Profile() {
 
               <Stack direction="row" spacing={1} alignItems="center">
                 <PersonOutlineIcon color="primary" />
-
                 <Box>
                   <Typography variant="caption" sx={{ color: "#3b82f6" }}>
                     Phone Number
                   </Typography>
-
                   <Typography sx={{ fontWeight: 600 }}>
                     {user.phone_number || "Not provided"}
                   </Typography>
@@ -344,7 +404,6 @@ function Profile() {
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <EventIcon color="primary" sx={{ pt: 0.6 }} />
-
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Events Created
                 </Typography>
@@ -387,7 +446,6 @@ function Profile() {
                         }}
                         spacing={2}
                       >
-                        {/* Event Details */}
                         <Box>
                           <Typography sx={{ fontWeight: 700 }}>
                             {event.name}
@@ -433,9 +491,12 @@ function Profile() {
                             variant="outlined"
                             color="error"
                             startIcon={<DeleteOutlineIcon />}
+                            disabled={deletingEventId === event.id}
                             onClick={() => handleDeleteEvent(event.id)}
                           >
-                            Delete
+                            {deletingEventId === event.id
+                              ? "Deleting..."
+                              : "Delete"}
                           </Button>
 
                           <Button
@@ -478,7 +539,6 @@ function Profile() {
             >
               <Stack direction="row" spacing={1} alignItems="center">
                 <LocalActivityIcon color="success" sx={{ pt: 0.6 }} />
-
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Enrolled Events
                 </Typography>
@@ -500,22 +560,25 @@ function Profile() {
             ) : enrolledError ? (
               <Alert severity="warning">{enrolledError}</Alert>
             ) : enrolledEvents.length === 0 ? (
-              <Typography color="textSecondary" sx={{ py: 2 }}>
-                You haven't enrolled in any events yet.
-              </Typography>
+              <Box>
+                <Typography color="textSecondary" sx={{ py: 2 }}>
+                  You haven't enrolled in any events yet.
+                </Typography>
+                <Button onClick={() => navigate("/events")}>
+                  Browse Events
+                </Button>
+              </Box>
             ) : (
               <Stack spacing={2} sx={{ mt: 2 }}>
                 {enrolledEvents.map((event) => (
                   <Card
-                    key={event.id}
+                    key={event.registration_id}
                     variant="outlined"
                     sx={{ borderRadius: 2 }}
                   >
                     <CardContent>
                       <Stack
-                        sx={{
-                          justifyContent: "space-between",
-                        }}
+                        sx={{ justifyContent: "space-between" }}
                         direction={{ xs: "column", sm: "row" }}
                         alignItems={{
                           xs: "flex-start",
@@ -523,7 +586,6 @@ function Profile() {
                         }}
                         spacing={2}
                       >
-                        {/* Enrolled Event Details */}
                         <Box>
                           <Typography sx={{ fontWeight: 700 }}>
                             {event.name}
@@ -548,15 +610,35 @@ function Profile() {
                           )}
                         </Box>
 
-                        {/* View Event */}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="success"
-                          onClick={() => navigate(`/events/${event.id}`)}
+                        {/* Enrolled Event Actions */}
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={1}
                         >
-                          View Event
-                        </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            onClick={() => navigate(`/events/${event.id}`)}
+                          >
+                            View Event
+                          </Button>
+
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<CancelOutlinedIcon />}
+                            disabled={
+                              cancellingRegistrationId === event.registration_id
+                            }
+                            onClick={() => handleCancelRegistration(event)}
+                          >
+                            {cancellingRegistrationId === event.registration_id
+                              ? "Cancelling..."
+                              : "Cancel Registration"}
+                          </Button>
+                        </Stack>
                       </Stack>
                     </CardContent>
                   </Card>

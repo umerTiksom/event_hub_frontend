@@ -25,8 +25,8 @@ import Loading from "../components/Loading";
 
 const categories = [
   { name: "Technology", icon: <CodeIcon /> },
-  { name: "Business", icon: <BusinessCenterIcon /> },
-  { name: "Music", icon: <MusicNoteIcon /> },
+  { name: "Education", icon: <BusinessCenterIcon /> },
+  { name: "Entertainment", icon: <MusicNoteIcon /> },
   { name: "Sports", icon: <SportsBasketballIcon /> },
 ];
 
