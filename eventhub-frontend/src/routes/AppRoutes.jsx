@@ -14,6 +14,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import NotFound from "../pages/NotFound";
+import NavigateLoginRoute from "../components/NavigateLoginRoute";
 function AppRoutes() {
   return (
     <Routes>
@@ -23,8 +24,11 @@ function AppRoutes() {
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route element={<NavigateLoginRoute />}>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+        </Route>
 
         {/* Protect routes for the sequrity purpose */}
         <Route element={<ProtectedRoute />}>
