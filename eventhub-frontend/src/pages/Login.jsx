@@ -12,10 +12,12 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
+
 import { useAuth } from "../context/AuthContext";
 import LoginIcon from "@mui/icons-material/Login";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../api/axios";
 
@@ -23,6 +25,7 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -34,7 +37,6 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rateLimitSecond, setRateLimitSecond] = useState(0);
 
-  // Countdown timer for 429 Too Many Requests
   useEffect(() => {
     if (rateLimitSecond <= 0) return;
 
@@ -55,7 +57,6 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prevent new requests during the cooldown
     if (rateLimitSecond > 0 || loading) return;
 
     setError("");
@@ -122,12 +123,10 @@ function Login() {
       "&:hover fieldset": {
         borderColor: "#64748b",
       },
-
       "&.Mui-focused fieldset": {
         borderColor: "#3157d5",
       },
     },
-
     "& input::placeholder": {
       color: "#273248",
       opacity: 1,
@@ -153,11 +152,7 @@ function Login() {
             borderRadius: 4,
           }}
         >
-          <Stack
-            spacing={1}
-            alignItems="center"
-            sx={{ mb: 4, justifyContent: "center" }}
-          >
+          <Stack spacing={1} alignItems="center" sx={{ mb: 4 }}>
             <Box
               sx={{
                 width: 64,
@@ -183,21 +178,18 @@ function Login() {
             </Typography>
           </Stack>
 
-          {/* General error alert */}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
-          {/* Login success alert */}
           {success && (
             <Alert severity="success" sx={{ mb: 2 }}>
               {success}
             </Alert>
           )}
 
-          {/* Rate limit alert */}
           {rateLimitSecond > 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
               Too many requests! Please wait{" "}
@@ -266,11 +258,9 @@ function Login() {
                   borderRadius: 2,
                   bgcolor: "#3157d5",
                   fontWeight: 700,
-
                   "&:hover": {
                     bgcolor: "#2445b5",
                   },
-
                   "&.Mui-disabled": {
                     bgcolor: "#475569",
                     color: "#ffffff",
@@ -283,6 +273,24 @@ function Login() {
                     ? "Logging in..."
                     : "Login"}
               </Button>
+
+              <Stack direction="row" justifyContent="center" spacing={1}>
+                <Typography sx={{ color: "grey.400" }}>
+                  Forgot your password?
+                </Typography>
+
+                <MuiLink
+                  component={Link}
+                  to="/forgot-password"
+                  underline="hover"
+                  sx={{
+                    color: "#8ba7ff",
+                    fontWeight: 600,
+                  }}
+                >
+                  Forgot Password
+                </MuiLink>
+              </Stack>
 
               <Typography textAlign="center" sx={{ color: "grey.400" }}>
                 Don't have an account?

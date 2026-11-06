@@ -11,6 +11,8 @@ import CreateEvent from "../pages/CreateEvent";
 import EventMembers from "../components/EventMembers";
 import EditEvent from "../pages/EditEvent";
 import ProtectedRoute from "../components/ProtectedRoute";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 import NotFound from "../pages/NotFound";
 function AppRoutes() {
   return (
@@ -21,6 +23,8 @@ function AppRoutes() {
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Protect routes for the sequrity purpose */}
         <Route element={<ProtectedRoute />}>
