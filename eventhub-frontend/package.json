@@ -15,6 +15,7 @@
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.5.0",
     "@mui/x-date-pickers": "^9.16.0",
+    "@rails/actioncable": "^8.1.401",
     "axios": "^1.20.0",
     "dayjs": "^1.11.23",
     "react": "^19.2.8",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createCableConsumer } from "../cable";
 
 import {
   Box,
@@ -11,7 +12,6 @@ import {
   Grid,
   Stack,
   Chip,
-  CircularProgress,
   Button,
   Pagination,
 } from "@mui/material";
@@ -21,6 +21,21 @@ import EventCard from "../components/EventCards";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import Loading from "../components/Loading";
+
+const formatEvent = (event) => ({
+  ...event,
+  id: event.id ?? event.event_id,
+  title: event.title ?? event.name ?? "",
+  name: event.name ?? event.title ?? "",
+  description: event.description ?? "",
+  category:
+    typeof event.category === "string"
+      ? event.category
+      : (event.category?.name ?? event.category_name ?? "Uncategorized"),
+  location: event.location ?? "",
+  date: event.date ?? "",
+  image: event.image ?? event.image_url ?? "",
+});
 
 function Events() {
   const [events, setEvents] = useState([]);
@@ -51,7 +66,7 @@ function Events() {
         setError("");
 
         const params = {
-          page: page,
+          page,
           per_page: 12,
         };
 
@@ -67,27 +82,11 @@ function Events() {
           params,
         });
 
-        // Rails returns { status, data, pagination }
         const data = Array.isArray(response.data.data)
           ? response.data.data
           : [];
 
-        const formattedEvents = data.map((event) => ({
-          ...event,
-          id: event.id ?? event.event_id,
-          title: event.title ?? event.name ?? "",
-          name: event.name ?? event.title ?? "",
-          description: event.description ?? "",
-          category:
-            typeof event.category === "string"
-              ? event.category
-              : (event.category?.name ??
-                event.category_name ??
-                "Uncategorized"),
-          location: event.location ?? "",
-          date: event.date ?? "",
-          image: event.image ?? event.image_url ?? "",
-        }));
+        const formattedEvents = data.map(formatEvent);
 
         setEvents(formattedEvents);
 
@@ -119,6 +118,125 @@ function Events() {
     fetchEvents();
   }, [page, search, selectedCategory, refresh]);
 
+  // Action Cable: Listen for real-time event changes
+  useEffect(() => {
+    const consumer = createCableConsumer(token);
+
+    const subscription = consumer.subscriptions.create(
+      { channel: "EventsChannel" },
+      {
+        connected() {
+          console.log("Connected to EventsChannel");
+        },
+
+        disconnected() {
+          console.log("Disconnected from EventsChannel");
+        },
+
+        rejected() {
+          console.log("EventsChannel subscription rejected");
+        },
+
+        received(data) {
+          console.log("Received WebSocket data:", data);
+
+          // Handle newly created events
+          if (data.action === "created" && data.event) {
+            const newEvent = formatEvent(data.event);
+
+            const matchesSearch =
+              !search.trim() ||
+              `${newEvent.title} ${newEvent.description}`
+                .toLowerCase()
+                .includes(search.trim().toLowerCase());
+
+            const matchesCategory =
+              selectedCategory === "All" ||
+              newEvent.category.toLowerCase() ===
+                selectedCategory.toLowerCase();
+
+            if (!matchesSearch || !matchesCategory) {
+              return;
+            }
+
+            if (page === 1) {
+              setEvents((previousEvents) => {
+                const alreadyExists = previousEvents.some(
+                  (event) => event.id === newEvent.id,
+                );
+
+                if (alreadyExists) {
+                  return previousEvents;
+                }
+
+                return [newEvent, ...previousEvents].slice(0, 12);
+              });
+            }
+
+            setPagination((previous) => ({
+              ...previous,
+              totalCount: previous.totalCount + 1,
+              totalPages: Math.ceil((previous.totalCount + 1) / 12),
+            }));
+          }
+
+          // Handle deleted events
+          if (data.action === "deleted") {
+            const deletedEvent = data.event ? formatEvent(data.event) : null;
+
+            const deletedEventId = data.event_id ?? deletedEvent?.id;
+
+            if (!deletedEventId) {
+              console.error("Deleted event ID is missing from broadcast");
+              return;
+            }
+
+            // Check whether the deleted event matches current filters
+            const matchesSearch =
+              !search.trim() ||
+              (deletedEvent &&
+                `${deletedEvent.title} ${deletedEvent.description}`
+                  .toLowerCase()
+                  .includes(search.trim().toLowerCase()));
+
+            const matchesCategory =
+              selectedCategory === "All" ||
+              (deletedEvent &&
+                deletedEvent.category.toLowerCase() ===
+                  selectedCategory.toLowerCase());
+
+            if (!matchesSearch || !matchesCategory) {
+              return;
+            }
+
+            // Remove deleted event from React state
+            setEvents((previousEvents) =>
+              previousEvents.filter(
+                (event) => String(event.id) !== String(deletedEventId),
+              ),
+            );
+
+            // Update pagination count
+            setPagination((previous) => {
+              const newTotalCount = Math.max(0, previous.totalCount - 1);
+
+              return {
+                ...previous,
+                totalCount: newTotalCount,
+                totalPages: Math.max(1, Math.ceil(newTotalCount / 12)),
+              };
+            });
+          }
+        },
+      },
+    );
+
+    return () => {
+      subscription.unsubscribe();
+      consumer.disconnect();
+    };
+  }, [token, page, search, selectedCategory]);
+
   // Generate category options from fetched events
   const categories = [
     "All",
@@ -137,11 +255,7 @@ function Events() {
   };
 
   return (
-    <Box
-      sx={{
-        color: "white",
-      }}
-    >
+    <Box sx={{ color: "white" }}>
       <Container maxWidth="xl" sx={{ py: { xs: 4, md: 6 } }}>
         {/* Page Heading */}
         <Stack spacing={2} sx={{ mb: 4 }} direction="column">
@@ -285,7 +399,6 @@ function Events() {
             <Loading />
           </Box>
         ) : error ? (
-          /* Error State */
           <Box sx={{ textAlign: "center", py: 8 }}>
             <Typography color="error" variant="h6" sx={{ mb: 2 }}>
               {error}
@@ -380,7 +493,6 @@ function Events() {
                 )}
               </>
             ) : (
-              /* No Events Found */
               <Box
                 sx={{
                   textAlign: "center",

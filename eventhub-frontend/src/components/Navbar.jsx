@@ -22,6 +22,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "../components/NotificationBell";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -30,7 +31,6 @@ function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Context API
   const { user, token, logout } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -38,20 +38,23 @@ function Navbar() {
   const currentPath = location.pathname;
   const isLoggedIn = Boolean(user && token);
 
+  // Open mobile menu
   const handleMenuOpen = () => {
     setMobileOpen(true);
   };
 
+  // Close mobile menu
   const handleMenuClose = () => {
     setMobileOpen(false);
   };
 
+  // Navigate to another page
   const handleNavigation = (path) => {
     navigate(path);
     handleMenuClose();
   };
 
-  // Logout user using AuthContext
+  // Logout user
   const handleLogout = () => {
     logout();
     handleMenuClose();
@@ -66,6 +69,7 @@ function Navbar() {
     { label: "Events", path: "/events" },
   ];
 
+  // Check active navigation link
   const isActive = (path) => {
     if (path === "/") {
       return currentPath === "/";
@@ -74,6 +78,7 @@ function Navbar() {
     return currentPath.startsWith(path);
   };
 
+  // Navigation button styles
   const navButtonStyles = (path) => ({
     color: isActive(path) ? "white" : "#94a3b8",
     fontWeight: isActive(path) ? 700 : 500,
@@ -180,8 +185,13 @@ function Navbar() {
 
                 {isLoggedIn ? (
                   <>
+                    {/* Notifications */}
+                    <NotificationBell />
+
+                    {/* User Profile */}
                     <UserAvatar />
 
+                    {/* Logout */}
                     <Button
                       onClick={handleLogout}
                       variant="outlined"
@@ -327,7 +337,7 @@ function Navbar() {
             </IconButton>
           </Box>
 
-          {/* Navigation Links */}
+          {/* Mobile Navigation Links */}
           <Box
             sx={{
               display: "flex",
@@ -376,6 +386,9 @@ function Navbar() {
           >
             {isLoggedIn ? (
               <>
+                {/* Mobile Notifications */}
+                <NotificationBell />
+
                 <UserAvatar />
 
                 <Typography
